@@ -1,0 +1,205 @@
+{
+  "sampleResources": [
+    {
+      "id": "res-001",
+      "displayName": "Development",
+      "environmentType": "development",
+      "resourceName": "appconfig-dev-eastus",
+      "resourceGroup": "rg-featuretoggle-dev",
+      "connectionString": "Endpoint=https://appconfig-dev-eastus.azconfig.io;Id=***;Secret=***",
+      "subscriptionId": "12345678-1234-1234-1234-123456789abc",
+      "connectionStatus": "connected",
+      "lastTested": "2026-01-28T14:30:00Z",
+      "createdAt": "2026-01-20T10:00:00Z",
+      "updatedAt": "2026-01-28T14:30:00Z"
+    },
+    {
+      "id": "res-002",
+      "displayName": "Staging",
+      "environmentType": "staging",
+      "resourceName": "appconfig-staging-eastus",
+      "resourceGroup": "rg-featuretoggle-staging",
+      "connectionString": "Endpoint=https://appconfig-staging-eastus.azconfig.io;Id=***;Secret=***",
+      "subscriptionId": "12345678-1234-1234-1234-123456789abc",
+      "connectionStatus": "connected",
+      "lastTested": "2026-01-28T14:25:00Z",
+      "createdAt": "2026-01-20T10:05:00Z",
+      "updatedAt": "2026-01-28T14:25:00Z"
+    },
+    {
+      "id": "res-003",
+      "displayName": "Production",
+      "environmentType": "production",
+      "resourceName": "appconfig-prod-eastus",
+      "resourceGroup": "rg-featuretoggle-prod",
+      "connectionString": "Endpoint=https://appconfig-prod-eastus.azconfig.io;Id=***;Secret=***",
+      "subscriptionId": "12345678-1234-1234-1234-123456789abc",
+      "connectionStatus": "connected",
+      "lastTested": "2026-01-28T14:20:00Z",
+      "createdAt": "2026-01-20T10:10:00Z",
+      "updatedAt": "2026-01-28T14:20:00Z"
+    }
+  ],
+  "emptyState": {
+    "resources": [],
+    "isLoading": false,
+    "error": null
+  },
+  "loadingState": {
+    "resources": [],
+    "isLoading": true,
+    "error": null
+  },
+  "errorState": {
+    "resources": [],
+    "isLoading": false,
+    "error": "Failed to load resources. Please check your connection and try again."
+  },
+  "resourceFormExamples": {
+    "newResource": {
+      "mode": "add",
+      "data": {
+        "displayName": "",
+        "environmentType": "development",
+        "resourceName": "",
+        "resourceGroup": "",
+        "connectionString": "",
+        "subscriptionId": "12345678-1234-1234-1234-123456789abc"
+      },
+      "isSubmitting": false,
+      "isTesting": false,
+      "testResult": null,
+      "errors": {}
+    },
+    "filledForm": {
+      "mode": "add",
+      "data": {
+        "displayName": "QA Environment",
+        "environmentType": "staging",
+        "resourceName": "appconfig-qa-westus",
+        "resourceGroup": "rg-featuretoggle-qa",
+        "connectionString": "Endpoint=https://appconfig-qa-westus.azconfig.io;Id=abc123;Secret=secretkey123",
+        "subscriptionId": "12345678-1234-1234-1234-123456789abc"
+      },
+      "isSubmitting": false,
+      "isTesting": false,
+      "testResult": null,
+      "errors": {}
+    },
+    "testingConnection": {
+      "mode": "add",
+      "data": {
+        "displayName": "QA Environment",
+        "environmentType": "staging",
+        "resourceName": "appconfig-qa-westus",
+        "resourceGroup": "rg-featuretoggle-qa",
+        "connectionString": "Endpoint=https://appconfig-qa-westus.azconfig.io;Id=abc123;Secret=secretkey123",
+        "subscriptionId": "12345678-1234-1234-1234-123456789abc"
+      },
+      "isSubmitting": false,
+      "isTesting": true,
+      "testResult": null,
+      "errors": {}
+    },
+    "connectionSuccess": {
+      "mode": "add",
+      "data": {
+        "displayName": "QA Environment",
+        "environmentType": "staging",
+        "resourceName": "appconfig-qa-westus",
+        "resourceGroup": "rg-featuretoggle-qa",
+        "connectionString": "Endpoint=https://appconfig-qa-westus.azconfig.io;Id=abc123;Secret=secretkey123",
+        "subscriptionId": "12345678-1234-1234-1234-123456789abc"
+      },
+      "isSubmitting": false,
+      "isTesting": false,
+      "testResult": {
+        "success": true,
+        "message": "Connection successful! Resource is accessible.",
+        "timestamp": "2026-01-28T15:00:00Z"
+      },
+      "errors": {}
+    },
+    "connectionError": {
+      "mode": "add",
+      "data": {
+        "displayName": "QA Environment",
+        "environmentType": "staging",
+        "resourceName": "appconfig-qa-westus",
+        "resourceGroup": "rg-featuretoggle-qa",
+        "connectionString": "Endpoint=https://appconfig-qa-westus.azconfig.io;Id=invalid;Secret=wrong",
+        "subscriptionId": "12345678-1234-1234-1234-123456789abc"
+      },
+      "isSubmitting": false,
+      "isTesting": false,
+      "testResult": {
+        "success": false,
+        "message": "Connection failed: Invalid connection string or insufficient permissions.",
+        "timestamp": "2026-01-28T15:00:00Z"
+      },
+      "errors": {}
+    },
+    "validationErrors": {
+      "mode": "add",
+      "data": {
+        "displayName": "",
+        "environmentType": "development",
+        "resourceName": "",
+        "resourceGroup": "",
+        "connectionString": "",
+        "subscriptionId": "12345678-1234-1234-1234-123456789abc"
+      },
+      "isSubmitting": false,
+      "isTesting": false,
+      "testResult": null,
+      "errors": {
+        "displayName": "Display name is required",
+        "resourceName": "Resource name is required",
+        "resourceGroup": "Resource group is required",
+        "connectionString": "Connection string is required"
+      }
+    },
+    "editMode": {
+      "mode": "edit",
+      "data": {
+        "displayName": "Development",
+        "environmentType": "development",
+        "resourceName": "appconfig-dev-eastus",
+        "resourceGroup": "rg-featuretoggle-dev",
+        "connectionString": "Endpoint=https://appconfig-dev-eastus.azconfig.io;Id=***;Secret=***",
+        "subscriptionId": "12345678-1234-1234-1234-123456789abc"
+      },
+      "isSubmitting": false,
+      "isTesting": false,
+      "testResult": null,
+      "errors": {}
+    }
+  },
+  "connectionTestResults": {
+    "success": {
+      "success": true,
+      "message": "Connection successful! Resource is accessible.",
+      "timestamp": "2026-01-28T15:00:00Z"
+    },
+    "invalidConnectionString": {
+      "success": false,
+      "message": "Connection failed: Invalid connection string format.",
+      "timestamp": "2026-01-28T15:00:00Z"
+    },
+    "insufficientPermissions": {
+      "success": false,
+      "message": "Connection failed: Insufficient permissions to access this resource.",
+      "timestamp": "2026-01-28T15:00:00Z"
+    },
+    "networkTimeout": {
+      "success": false,
+      "message": "Connection failed: Request timed out. Please check your network connection.",
+      "timestamp": "2026-01-28T15:00:00Z"
+    },
+    "resourceNotFound": {
+      "success": false,
+      "message": "Connection failed: Resource not found. Please verify the resource name.",
+      "timestamp": "2026-01-28T15:00:00Z"
+    }
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "sampleToggles": [
+    {
+      "id": "toggle-001",
+      "name": "new-checkout-flow",
+      "description": "Enable the redesigned checkout experience",
+      "enabled": true,
+      "lastModifiedBy": "YOUR_NAME",
+      "lastModifiedAt": "2026-01-28T14:30:00Z"
+    },
+    {
+      "id": "toggle-002",
+      "name": "dark-mode",
+      "description": "Enable dark mode theme option",
+      "enabled": true,
+      "lastModifiedBy": "Sarah Johnson",
+      "lastModifiedAt": "2026-01-27T10:15:00Z"
+    },
+    {
+      "id": "toggle-003",
+      "name": "ai-recommendations",
+      "description": "Show AI-powered product recommendations",
+      "enabled": false,
+      "lastModifiedBy": "Michael Chen",
+      "lastModifiedAt": "2026-01-26T16:45:00Z"
+    },
+    {
+      "id": "toggle-004",
+      "name": "social-login",
+      "description": "Allow login with Google and Microsoft accounts",
+      "enabled": true,
+      "lastModifiedBy": "YOUR_NAME",
+      "lastModifiedAt": "2026-01-28T09:20:00Z"
+    },
+    {
+      "id": "toggle-005",
+      "name": "advanced-search",
+      "description": "Enable advanced search with filters",
+      "enabled": false,
+      "lastModifiedBy": "Emma Williams",
+      "lastModifiedAt": "2026-01-25T14:00:00Z"
+    },
+    {
+      "id": "toggle-006",
+      "name": "live-chat-support",
+      "description": "Enable live chat widget for customer support",
+      "enabled": true,
+      "lastModifiedBy": "YOUR_NAME",
+      "lastModifiedAt": "2026-01-28T11:30:00Z"
+    },
+    {
+      "id": "toggle-007",
+      "name": "beta-dashboard",
+      "description": "New dashboard layout with analytics",
+      "enabled": false,
+      "lastModifiedBy": "Sarah Johnson",
+      "lastModifiedAt": "2026-01-24T13:15:00Z"
+    },
+    {
+      "id": "toggle-008",
+      "name": "mobile-app-banner",
+      "description": "Show banner promoting mobile app download",
+      "enabled": true,
+      "lastModifiedBy": "Michael Chen",
+      "lastModifiedAt": "2026-01-27T15:00:00Z"
+    },
+    {
+      "id": "toggle-009",
+      "name": "email-notifications",
+      "description": "Send email notifications for order updates",
+      "enabled": true,
+      "lastModifiedBy": "YOUR_NAME",
+      "lastModifiedAt": "2026-01-28T08:45:00Z"
+    },
+    {
+      "id": "toggle-010",
+      "name": "product-reviews",
+      "description": "Allow customers to write and view product reviews",
+      "enabled": false,
+      "lastModifiedBy": "Emma Williams",
+      "lastModifiedAt": "2026-01-23T10:30:00Z"
+    }
+  ],
+  "dashboardStates": {
+    "adminDevelopment": {
+      "toggles": [],
+      "isLoading": false,
+      "error": null,
+      "currentResource": {
+        "id": "res-001",
+        "displayName": "Development",
+        "environmentType": "development"
+      },
+      "userRole": "admin",
+      "searchQuery": "",
+      "filter": "all"
+    },
+    "readOnlyProduction": {
+      "toggles": [],
+      "isLoading": false,
+      "error": null,
+      "currentResource": {
+        "id": "res-003",
+        "displayName": "Production",
+        "environmentType": "production"
+      },
+      "userRole": "read-only",
+      "searchQuery": "",
+      "filter": "all"
+    },
+    "loading": {
+      "toggles": [],
+      "isLoading": true,
+      "error": null,
+      "currentResource": {
+        "id": "res-001",
+        "displayName": "Development",
+        "environmentType": "development"
+      },
+      "userRole": "admin",
+      "searchQuery": "",
+      "filter": "all"
+    },
+    "error": {
+      "toggles": [],
+      "isLoading": false,
+      "error": "Failed to load feature toggles. Please check your connection and try again.",
+      "currentResource": {
+        "id": "res-001",
+        "displayName": "Development",
+        "environmentType": "development"
+      },
+      "userRole": "admin",
+      "searchQuery": "",
+      "filter": "all"
+    },
+    "empty": {
+      "toggles": [],
+      "isLoading": false,
+      "error": null,
+      "currentResource": {
+        "id": "res-001",
+        "displayName": "Development",
+        "environmentType": "development"
+      },
+      "userRole": "admin",
+      "searchQuery": "",
+      "filter": "all"
+    }
+  },
+  "toggleChangeExamples": {
+    "nonProductionChange": {
+      "toggleId": "toggle-001",
+      "toggleName": "new-checkout-flow",
+      "currentState": false,
+      "newState": true,
+      "requiresConfirmation": false
+    },
+    "productionChange": {
+      "toggleId": "toggle-001",
+      "toggleName": "new-checkout-flow",
+      "currentState": false,
+      "newState": true,
+      "requiresConfirmation": true
+    }
+  },
+  "toggleChangeResults": {
+    "success": {
+      "success": true,
+      "message": "Feature toggle updated successfully",
+      "toggle": {
+        "id": "toggle-001",
+        "name": "new-checkout-flow",
+        "description": "Enable the redesigned checkout experience",
+        "enabled": true,
+        "lastModifiedBy": "YOUR_NAME",
+        "lastModifiedAt": "2026-01-28T15:00:00Z"
+      }
+    },
+    "error": {
+      "success": false,
+      "message": "Failed to update toggle: Network error. Please try again."
+    },
+    "permissionDenied": {
+      "success": false,
+      "message": "Failed to update toggle: Insufficient permissions."
+    }
+  },
+  "searchExamples": {
+    "noQuery": {
+      "searchQuery": "",
+      "resultCount": 10
+    },
+    "withResults": {
+      "searchQuery": "checkout",
+      "resultCount": 1
+    },
+    "noResults": {
+      "searchQuery": "nonexistent",
+      "resultCount": 0
+    }
+  },
+  "filterExamples": {
+    "all": {
+      "filter": "all",
+      "description": "Show all toggles"
+    },
+    "enabledOnly": {
+      "filter": "enabled",
+      "description": "Show only enabled toggles"
+    },
+    "disabledOnly": {
+      "filter": "disabled",
+      "description": "Show only disabled toggles"
+    }
+  }
+}

@@ -1,0 +1,277 @@
+{
+  "sampleLogEntries": [
+    {
+      "id": "log-001",
+      "timestamp": "2026-01-28T14:30:00Z",
+      "userId": "user-001",
+      "userName": "YOUR_NAME",
+      "userEmail": "jan@example.com",
+      "action": "enabled",
+      "toggleId": "toggle-001",
+      "toggleName": "new-checkout-flow",
+      "resourceId": "res-001",
+      "resourceName": "Development",
+      "environmentType": "development",
+      "previousState": false,
+      "newState": true
+    },
+    {
+      "id": "log-002",
+      "timestamp": "2026-01-28T13:45:00Z",
+      "userId": "user-002",
+      "userName": "Sarah Johnson",
+      "userEmail": "sarah.johnson@example.com",
+      "action": "disabled",
+      "toggleId": "toggle-003",
+      "toggleName": "ai-recommendations",
+      "resourceId": "res-003",
+      "resourceName": "Production",
+      "environmentType": "production",
+      "previousState": true,
+      "newState": false
+    },
+    {
+      "id": "log-003",
+      "timestamp": "2026-01-28T12:20:00Z",
+      "userId": "user-001",
+      "userName": "YOUR_NAME",
+      "userEmail": "jan@example.com",
+      "action": "enabled",
+      "toggleId": "toggle-006",
+      "toggleName": "live-chat-support",
+      "resourceId": "res-002",
+      "resourceName": "Staging",
+      "environmentType": "staging",
+      "previousState": false,
+      "newState": true
+    },
+    {
+      "id": "log-004",
+      "timestamp": "2026-01-28T11:15:00Z",
+      "userId": "user-003",
+      "userName": "Michael Chen",
+      "userEmail": "michael.chen@example.com",
+      "action": "enabled",
+      "toggleId": "toggle-008",
+      "toggleName": "mobile-app-banner",
+      "resourceId": "res-001",
+      "resourceName": "Development",
+      "environmentType": "development",
+      "previousState": false,
+      "newState": true
+    },
+    {
+      "id": "log-005",
+      "timestamp": "2026-01-28T10:30:00Z",
+      "userId": "user-002",
+      "userName": "Sarah Johnson",
+      "userEmail": "sarah.johnson@example.com",
+      "action": "disabled",
+      "toggleId": "toggle-007",
+      "toggleName": "beta-dashboard",
+      "resourceId": "res-002",
+      "resourceName": "Staging",
+      "environmentType": "staging",
+      "previousState": true,
+      "newState": false
+    },
+    {
+      "id": "log-006",
+      "timestamp": "2026-01-28T09:45:00Z",
+      "userId": "user-001",
+      "userName": "YOUR_NAME",
+      "userEmail": "jan@example.com",
+      "action": "enabled",
+      "toggleId": "toggle-004",
+      "toggleName": "social-login",
+      "resourceId": "res-003",
+      "resourceName": "Production",
+      "environmentType": "production",
+      "previousState": false,
+      "newState": true
+    },
+    {
+      "id": "log-007",
+      "timestamp": "2026-01-27T16:20:00Z",
+      "userId": "user-004",
+      "userName": "Emma Williams",
+      "userEmail": "emma.williams@example.com",
+      "action": "disabled",
+      "toggleId": "toggle-005",
+      "toggleName": "advanced-search",
+      "resourceId": "res-001",
+      "resourceName": "Development",
+      "environmentType": "development",
+      "previousState": true,
+      "newState": false
+    },
+    {
+      "id": "log-008",
+      "timestamp": "2026-01-27T15:30:00Z",
+      "userId": "user-002",
+      "userName": "Sarah Johnson",
+      "userEmail": "sarah.johnson@example.com",
+      "action": "enabled",
+      "toggleId": "toggle-002",
+      "toggleName": "dark-mode",
+      "resourceId": "res-002",
+      "resourceName": "Staging",
+      "environmentType": "staging",
+      "previousState": false,
+      "newState": true
+    },
+    {
+      "id": "log-009",
+      "timestamp": "2026-01-27T14:15:00Z",
+      "userId": "user-003",
+      "userName": "Michael Chen",
+      "userEmail": "michael.chen@example.com",
+      "action": "disabled",
+      "toggleId": "toggle-010",
+      "toggleName": "product-reviews",
+      "resourceId": "res-001",
+      "resourceName": "Development",
+      "environmentType": "development",
+      "previousState": true,
+      "newState": false
+    },
+    {
+      "id": "log-010",
+      "timestamp": "2026-01-27T13:00:00Z",
+      "userId": "user-001",
+      "userName": "YOUR_NAME",
+      "userEmail": "jan@example.com",
+      "action": "enabled",
+      "toggleId": "toggle-009",
+      "toggleName": "email-notifications",
+      "resourceId": "res-003",
+      "resourceName": "Production",
+      "environmentType": "production",
+      "previousState": false,
+      "newState": true
+    },
+    {
+      "id": "log-011",
+      "timestamp": "2026-01-26T17:45:00Z",
+      "userId": "user-003",
+      "userName": "Michael Chen",
+      "userEmail": "michael.chen@example.com",
+      "action": "disabled",
+      "toggleId": "toggle-003",
+      "toggleName": "ai-recommendations",
+      "resourceId": "res-002",
+      "resourceName": "Staging",
+      "environmentType": "staging",
+      "previousState": true,
+      "newState": false
+    },
+    {
+      "id": "log-012",
+      "timestamp": "2026-01-26T16:30:00Z",
+      "userId": "user-004",
+      "userName": "Emma Williams",
+      "userEmail": "emma.williams@example.com",
+      "action": "enabled",
+      "toggleId": "toggle-001",
+      "toggleName": "new-checkout-flow",
+      "resourceId": "res-002",
+      "resourceName": "Staging",
+      "environmentType": "staging",
+      "previousState": false,
+      "newState": true
+    }
+  ],
+  "filterExamples": {
+    "noFilters": {
+      "dateRange": "last7days"
+    },
+    "last30Days": {
+      "dateRange": "last30days"
+    },
+    "specificUser": {
+      "dateRange": "last7days",
+      "userId": "user-001"
+    },
+    "productionOnly": {
+      "dateRange": "last7days",
+      "environmentType": "production"
+    },
+    "enabledActionsOnly": {
+      "dateRange": "last7days",
+      "action": "enabled"
+    },
+    "specificToggle": {
+      "dateRange": "last7days",
+      "toggleName": "new-checkout-flow"
+    },
+    "combined": {
+      "dateRange": "last30days",
+      "environmentType": "production",
+      "action": "enabled"
+    }
+  },
+  "stateExamples": {
+    "loading": {
+      "entries": [],
+      "isLoading": true,
+      "error": null,
+      "filters": {
+        "dateRange": "last7days"
+      },
+      "totalCount": 0,
+      "hasMore": false
+    },
+    "populated": {
+      "entries": [],
+      "isLoading": false,
+      "error": null,
+      "filters": {
+        "dateRange": "last7days"
+      },
+      "totalCount": 12,
+      "hasMore": true
+    },
+    "empty": {
+      "entries": [],
+      "isLoading": false,
+      "error": null,
+      "filters": {
+        "dateRange": "last7days"
+      },
+      "totalCount": 0,
+      "hasMore": false
+    },
+    "error": {
+      "entries": [],
+      "isLoading": false,
+      "error": "Failed to load audit logs. Please try again.",
+      "filters": {
+        "dateRange": "last7days"
+      },
+      "totalCount": 0,
+      "hasMore": false
+    }
+  },
+  "users": [
+    {
+      "id": "user-001",
+      "name": "YOUR_NAME",
+      "email": "jan@example.com"
+    },
+    {
+      "id": "user-002",
+      "name": "Sarah Johnson",
+      "email": "sarah.johnson@example.com"
+    },
+    {
+      "id": "user-003",
+      "name": "Michael Chen",
+      "email": "michael.chen@example.com"
+    },
+    {
+      "id": "user-004",
+      "name": "Emma Williams",
+      "email": "emma.williams@example.com"
+    }
+  ]
+}

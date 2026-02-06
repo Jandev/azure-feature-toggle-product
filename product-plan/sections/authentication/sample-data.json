@@ -1,0 +1,143 @@
+{
+  "sampleUsers": [
+    {
+      "id": "user-001",
+      "name": "YOUR_NAME",
+      "email": "jan@example.com",
+      "role": "admin"
+    },
+    {
+      "id": "user-002",
+      "name": "Sarah Johnson",
+      "email": "sarah.johnson@example.com",
+      "role": "read-only"
+    },
+    {
+      "id": "user-003",
+      "name": "Michael Chen",
+      "email": "michael.chen@example.com",
+      "role": "admin"
+    },
+    {
+      "id": "user-004",
+      "name": "Emma Williams",
+      "email": "emma.williams@example.com",
+      "role": "read-only"
+    }
+  ],
+  "authenticationStates": {
+    "idle": {
+      "status": "idle",
+      "user": null,
+      "error": null,
+      "isAuthenticated": false
+    },
+    "loading": {
+      "status": "loading",
+      "user": null,
+      "error": null,
+      "isAuthenticated": false
+    },
+    "successAdmin": {
+      "status": "success",
+      "user": {
+        "id": "user-001",
+        "name": "YOUR_NAME",
+        "email": "jan@example.com",
+        "role": "admin"
+      },
+      "error": null,
+      "isAuthenticated": true
+    },
+    "successReadOnly": {
+      "status": "success",
+      "user": {
+        "id": "user-002",
+        "name": "Sarah Johnson",
+        "email": "sarah.johnson@example.com",
+        "role": "read-only"
+      },
+      "error": null,
+      "isAuthenticated": true
+    },
+    "errorInvalidCredentials": {
+      "status": "error",
+      "user": null,
+      "error": "Authentication failed. Please check your credentials and try again.",
+      "isAuthenticated": false
+    },
+    "errorNetworkError": {
+      "status": "error",
+      "user": null,
+      "error": "Unable to connect to the authentication service. Please check your internet connection and try again.",
+      "isAuthenticated": false
+    },
+    "errorUnauthorized": {
+      "status": "error",
+      "user": null,
+      "error": "Your account does not have access to this application. Please contact your administrator.",
+      "isAuthenticated": false
+    },
+    "errorSessionExpired": {
+      "status": "error",
+      "user": null,
+      "error": "Your session has expired. Please log in again.",
+      "isAuthenticated": false
+    }
+  },
+  "sessionExamples": {
+    "activeSession": {
+      "user": {
+        "id": "user-001",
+        "name": "YOUR_NAME",
+        "email": "jan@example.com",
+        "role": "admin"
+      },
+      "issuedAt": "2026-01-28T14:30:00Z",
+      "expiresAt": "2026-01-28T22:30:00Z"
+    },
+    "expiringSoon": {
+      "user": {
+        "id": "user-002",
+        "name": "Sarah Johnson",
+        "email": "sarah.johnson@example.com",
+        "role": "read-only"
+      },
+      "issuedAt": "2026-01-28T14:30:00Z",
+      "expiresAt": "2026-01-28T15:00:00Z"
+    }
+  },
+  "loginScenarios": {
+    "firstTimeLogin": {
+      "description": "New user logging in for the first time",
+      "user": {
+        "id": "user-005",
+        "name": "Alex Martinez",
+        "email": "alex.martinez@example.com",
+        "role": "read-only"
+      },
+      "showWelcomeMessage": true
+    },
+    "returningUser": {
+      "description": "Regular user logging in again",
+      "user": {
+        "id": "user-001",
+        "name": "YOUR_NAME",
+        "email": "jan@example.com",
+        "role": "admin"
+      },
+      "showWelcomeMessage": false
+    },
+    "afterSessionExpiry": {
+      "description": "User logging back in after session expired",
+      "user": {
+        "id": "user-002",
+        "name": "Sarah Johnson",
+        "email": "sarah.johnson@example.com",
+        "role": "read-only"
+      },
+      "previousUrl": "/dashboard",
+      "message": "Your session expired. Please log in to continue."
+    }
+  }
+}

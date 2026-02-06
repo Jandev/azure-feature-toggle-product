@@ -1,0 +1,130 @@
+{
+  "users": [
+    {
+      "id": "user-001",
+      "name": "YOUR_NAME",
+      "email": "jan@example.com",
+      "role": "admin"
+    },
+    {
+      "id": "user-002",
+      "name": "Sarah Johnson",
+      "email": "sarah.johnson@example.com",
+      "role": "read-only"
+    },
+    {
+      "id": "user-003",
+      "name": "Michael Chen",
+      "email": "michael.chen@example.com",
+      "role": "admin"
+    },
+    {
+      "id": "user-004",
+      "name": "Emma Williams",
+      "email": "emma.williams@example.com",
+      "role": "read-only"
+    }
+  ],
+  "appConfigResources": [
+    {
+      "id": "res-001",
+      "displayName": "Development",
+      "environmentType": "development",
+      "resourceName": "appconfig-dev-eastus",
+      "resourceGroup": "rg-featuretoggle-dev",
+      "connectionString": "Endpoint=https://appconfig-dev-eastus.azconfig.io;Id=***;Secret=***",
+      "subscriptionId": "12345678-1234-1234-1234-123456789abc",
+      "connectionStatus": "connected",
+      "lastTested": "2026-01-28T14:30:00Z",
+      "createdAt": "2026-01-20T10:00:00Z",
+      "updatedAt": "2026-01-28T14:30:00Z"
+    },
+    {
+      "id": "res-002",
+      "displayName": "Staging",
+      "environmentType": "staging",
+      "resourceName": "appconfig-staging-eastus",
+      "resourceGroup": "rg-featuretoggle-staging",
+      "connectionString": "Endpoint=https://appconfig-staging-eastus.azconfig.io;Id=***;Secret=***",
+      "subscriptionId": "12345678-1234-1234-1234-123456789abc",
+      "connectionStatus": "connected",
+      "lastTested": "2026-01-28T14:25:00Z",
+      "createdAt": "2026-01-20T10:05:00Z",
+      "updatedAt": "2026-01-28T14:25:00Z"
+    },
+    {
+      "id": "res-003",
+      "displayName": "Production",
+      "environmentType": "production",
+      "resourceName": "appconfig-prod-eastus",
+      "resourceGroup": "rg-featuretoggle-prod",
+      "connectionString": "Endpoint=https://appconfig-prod-eastus.azconfig.io;Id=***;Secret=***",
+      "subscriptionId": "12345678-1234-1234-1234-123456789abc",
+      "connectionStatus": "connected",
+      "lastTested": "2026-01-28T14:20:00Z",
+      "createdAt": "2026-01-20T10:10:00Z",
+      "updatedAt": "2026-01-28T14:20:00Z"
+    }
+  ],
+  "featureToggles": [
+    {
+      "id": "toggle-001",
+      "name": "new-checkout-flow",
+      "description": "Enable the redesigned checkout experience",
+      "enabled": true,
+      "lastModifiedBy": "YOUR_NAME",
+      "lastModifiedAt": "2026-01-28T14:30:00Z",
+      "resourceId": "res-001"
+    },
+    {
+      "id": "toggle-002",
+      "name": "dark-mode",
+      "description": "Enable dark mode theme option",
+      "enabled": true,
+      "lastModifiedBy": "Sarah Johnson",
+      "lastModifiedAt": "2026-01-27T10:15:00Z",
+      "resourceId": "res-001"
+    },
+    {
+      "id": "toggle-003",
+      "name": "ai-recommendations",
+      "description": "Show AI-powered product recommendations",
+      "enabled": false,
+      "lastModifiedBy": "Michael Chen",
+      "lastModifiedAt": "2026-01-26T16:45:00Z",
+      "resourceId": "res-001"
+    }
+  ],
+  "auditLogEntries": [
+    {
+      "id": "log-001",
+      "timestamp": "2026-01-28T14:30:00Z",
+      "userId": "user-001",
+      "userName": "YOUR_NAME",
+      "userEmail": "jan@example.com",
+      "action": "enabled",
+      "toggleId": "toggle-001",
+      "toggleName": "new-checkout-flow",
+      "resourceId": "res-001",
+      "resourceName": "Development",
+      "environmentType": "development",
+      "previousState": false,
+      "newState": true
+    },
+    {
+      "id": "log-002",
+      "timestamp": "2026-01-28T13:45:00Z",
+      "userId": "user-002",
+      "userName": "Sarah Johnson",
+      "userEmail": "sarah.johnson@example.com",
+      "action": "disabled",
+      "toggleId": "toggle-003",
+      "toggleName": "ai-recommendations",
+      "resourceId": "res-003",
+      "resourceName": "Production",
+      "environmentType": "production",
+      "previousState": true,
+      "newState": false
+    }
+  ]
+}
