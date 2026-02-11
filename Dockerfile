@@ -1,62 +1,50 @@
-# Multi-stage build for optimized production image
+# Multi-stage build for hosting both .NET backend and Vite frontend in a single container
 
-# Stage 1: Dependencies
-FROM node:20-alpine AS deps
-WORKDIR /app
+# Stage 1: Build Frontend
+FROM node:20-alpine AS frontend-build
+WORKDIR /frontend
 
-# Copy package files
-COPY package.json package-lock.json* ./
-
-# Install dependencies
+# Copy frontend package files
+COPY frontend/package*.json ./
 RUN npm ci
 
-# Stage 2: Builder
-FROM node:20-alpine AS builder
-WORKDIR /app
+# Copy frontend source code
+COPY frontend/ ./
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copy application code
-COPY . .
-
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build Next.js application
-ENV NEXT_TELEMETRY_DISABLED 1
+# Build frontend with /api as the base URL for API calls
+ENV VITE_API_BASE_URL=/api
 RUN npm run build
 
-# Stage 3: Runner
-FROM node:20-alpine AS runner
+# Stage 2: Build .NET Backend
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-build
+WORKDIR /backend
+
+# Copy backend project files
+COPY backend/*.csproj ./
+RUN dotnet restore
+
+# Copy backend source code
+COPY backend/ ./
+
+# Copy frontend build to wwwroot folder
+COPY --from=frontend-build /frontend/dist ./wwwroot
+
+# Publish backend
+RUN dotnet publish -c Release -o /backend/out
+
+# Stage 3: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+# Copy backend and frontend (in wwwroot)
+COPY --from=backend-build /backend/out ./
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Set environment variables
+ENV ASPNETCORE_URLS=http://0.0.0.0:5173
+ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Copy necessary files from builder
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
+# Expose only port 5173
+EXPOSE 5173
 
-# Copy built application
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copy Prisma files
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-# Run database migrations and start application
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+# Run the application
+CMD ["dotnet", "AzureFeatureToggleApi.dll"]

@@ -47,7 +47,10 @@ if (app.Environment.IsDevelopment())
 // Disable HTTPS redirection in development to avoid CORS issues
 // app.UseHttpsRedirection();
 
-// CORS must come first
+// Serve static files from wwwroot (frontend build)
+app.UseStaticFiles();
+
+// CORS must come first for API requests
 app.UseCors("AllowFrontend");
 
 // Handle OPTIONS requests explicitly before authentication
@@ -66,5 +69,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+// Fallback to index.html for SPA routing (must be last)
+app.MapFallbackToFile("index.html");
 
+app.Run();
