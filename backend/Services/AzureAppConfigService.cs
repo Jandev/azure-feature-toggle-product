@@ -1,4 +1,5 @@
 using Azure;
+using Azure.Core;
 using Azure.Data.AppConfiguration;
 using Azure.Identity;
 using AzureFeatureToggleApi.Models;
@@ -7,29 +8,27 @@ namespace AzureFeatureToggleApi.Services;
 
 public interface IAzureAppConfigService
 {
-    Task<ConnectionTestResult> TestConnectionAsync(string endpoint);
-    Task<List<FeatureToggle>> GetFeatureTogglesAsync(string endpoint, string resourceId);
-    Task<FeatureToggle?> UpdateFeatureToggleAsync(string endpoint, string resourceId, string toggleId, bool enabled, string userId, string userName);
-    Task<List<AuditLogEntry>> GetAuditLogsAsync(string endpoint, string resourceId, DateTime? startDate = null);
-    Task<string> GetUserRoleForResourceAsync(string endpoint, string subscriptionId, string resourceGroup, string resourceName, string userId);
+    Task<ConnectionTestResult> TestConnectionAsync(string endpoint, TokenCredential credential);
+    Task<List<FeatureToggle>> GetFeatureTogglesAsync(string endpoint, string resourceId, TokenCredential credential);
+    Task<FeatureToggle?> UpdateFeatureToggleAsync(string endpoint, string resourceId, string toggleId, bool enabled, string userId, string userName, TokenCredential credential);
+    Task<List<AuditLogEntry>> GetAuditLogsAsync(string endpoint, string resourceId, TokenCredential credential, DateTime? startDate = null);
+    Task<string> GetUserRoleForResourceAsync(string endpoint, string subscriptionId, string resourceGroup, string resourceName, string userId, TokenCredential credential);
 }
 
 public class AzureAppConfigService : IAzureAppConfigService
 {
     private readonly ILogger<AzureAppConfigService> _logger;
-    private readonly DefaultAzureCredential _credential;
 
     public AzureAppConfigService(ILogger<AzureAppConfigService> logger)
     {
         _logger = logger;
-        _credential = new DefaultAzureCredential();
     }
 
-    public async Task<ConnectionTestResult> TestConnectionAsync(string endpoint)
+    public async Task<ConnectionTestResult> TestConnectionAsync(string endpoint, TokenCredential credential)
     {
         try
         {
-            var client = new ConfigurationClient(new Uri(endpoint), _credential);
+            var client = new ConfigurationClient(new Uri(endpoint), credential);
             
             // Try to list one setting to verify connection
             await foreach (var setting in client.GetConfigurationSettingsAsync(new SettingSelector { KeyFilter = "*" }).AsPages(pageSizeHint: 1))
@@ -72,11 +71,11 @@ public class AzureAppConfigService : IAzureAppConfigService
         }
     }
 
-    public async Task<List<FeatureToggle>> GetFeatureTogglesAsync(string endpoint, string resourceId)
+    public async Task<List<FeatureToggle>> GetFeatureTogglesAsync(string endpoint, string resourceId, TokenCredential credential)
     {
         try
         {
-            var client = new ConfigurationClient(new Uri(endpoint), _credential);
+            var client = new ConfigurationClient(new Uri(endpoint), credential);
             var toggles = new List<FeatureToggle>();
 
             // Feature flags in Azure App Configuration have keys that start with ".appconfig.featureflag/"
@@ -115,11 +114,12 @@ public class AzureAppConfigService : IAzureAppConfigService
         string toggleId, 
         bool enabled, 
         string userId, 
-        string userName)
+        string userName,
+        TokenCredential credential)
     {
         try
         {
-            var client = new ConfigurationClient(new Uri(endpoint), _credential);
+            var client = new ConfigurationClient(new Uri(endpoint), credential);
             
             // Get the current setting
             var setting = await client.GetConfigurationSettingAsync(toggleId);
@@ -154,12 +154,13 @@ public class AzureAppConfigService : IAzureAppConfigService
 
     public async Task<List<AuditLogEntry>> GetAuditLogsAsync(
         string endpoint, 
-        string resourceId, 
+        string resourceId,
+        TokenCredential credential,
         DateTime? startDate = null)
     {
         try
         {
-            var client = new ConfigurationClient(new Uri(endpoint), _credential);
+            var client = new ConfigurationClient(new Uri(endpoint), credential);
             var logs = new List<AuditLogEntry>();
 
             // Get revisions for feature flags
@@ -208,7 +209,8 @@ public class AzureAppConfigService : IAzureAppConfigService
         string subscriptionId, 
         string resourceGroup, 
         string resourceName, 
-        string userId)
+        string userId,
+        TokenCredential credential)
     {
         // This is a simplified version - in production, you would:
         // 1. Use Azure.ResourceManager to check RBAC assignments
@@ -218,7 +220,7 @@ public class AzureAppConfigService : IAzureAppConfigService
         // For now, we'll try to write a test value to determine permissions
         try
         {
-            var client = new ConfigurationClient(new Uri(endpoint), _credential);
+            var client = new ConfigurationClient(new Uri(endpoint), credential);
             
             // Try to set a test configuration
             var testKey = $"_rbac_test_{Guid.NewGuid()}";

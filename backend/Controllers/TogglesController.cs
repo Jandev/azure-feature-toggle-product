@@ -8,16 +8,20 @@ namespace AzureFeatureToggleApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize] // All endpoints require authentication
 public class TogglesController : ControllerBase
 {
     private readonly IAzureAppConfigService _azureService;
+    private readonly ITokenCredentialProvider _tokenProvider;
     private readonly ILogger<TogglesController> _logger;
 
     public TogglesController(
         IAzureAppConfigService azureService,
+        ITokenCredentialProvider tokenProvider,
         ILogger<TogglesController> logger)
     {
         _azureService = azureService;
+        _tokenProvider = tokenProvider;
         _logger = logger;
     }
 
@@ -31,8 +35,23 @@ public class TogglesController : ControllerBase
             return BadRequest("Endpoint and resourceId are required");
         }
 
-        var toggles = await _azureService.GetFeatureTogglesAsync(endpoint, resourceId);
-        return Ok(toggles);
+        try
+        {
+            // Get App Configuration credential via OBO flow
+            var credential = await _tokenProvider.GetAppConfigCredentialAsync(HttpContext);
+            var toggles = await _azureService.GetFeatureTogglesAsync(endpoint, resourceId, credential);
+            return Ok(toggles);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Authorization failed while getting toggles");
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get toggles");
+            return StatusCode(500, new { error = "Failed to get toggles", details = ex.Message });
+        }
     }
 
     [HttpPut("{toggleId}")]
@@ -40,33 +59,49 @@ public class TogglesController : ControllerBase
         string toggleId,
         [FromBody] UpdateToggleRequest request)
     {
-        // URL decode the toggleId in case it contains encoded characters like %2F
-        toggleId = Uri.UnescapeDataString(toggleId);
-        
-        // Since we're not using [Authorize], User claims won't be available
-        // For now, use placeholder values - in production, you'd validate the token
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? 
-                     User.FindFirst("oid")?.Value ?? 
-                     "demo-user";
-        var userName = User.FindFirst(ClaimTypes.Name)?.Value ?? 
-                       User.Identity?.Name ?? 
-                       request.UserName ?? 
-                       "Demo User";
-
-        var result = await _azureService.UpdateFeatureToggleAsync(
-            request.Endpoint,
-            request.ResourceId,
-            toggleId,
-            request.Enabled,
-            userId,
-            userName);
-
-        if (result == null)
+        try
         {
-            return NotFound();
-        }
+            // URL decode the toggleId in case it contains encoded characters like %2F
+            toggleId = Uri.UnescapeDataString(toggleId);
+            
+            // Get user info from claims
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? 
+                         User.FindFirst("oid")?.Value ?? 
+                         "unknown";
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value ?? 
+                           User.FindFirst("name")?.Value ??
+                           User.Identity?.Name ?? 
+                           request.UserName ?? 
+                           "Unknown User";
 
-        return Ok(result);
+            // Get App Configuration credential via OBO flow
+            var credential = await _tokenProvider.GetAppConfigCredentialAsync(HttpContext);
+            var result = await _azureService.UpdateFeatureToggleAsync(
+                request.Endpoint,
+                request.ResourceId,
+                toggleId,
+                request.Enabled,
+                userId,
+                userName,
+                credential);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Authorization failed while updating toggle");
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update toggle");
+            return StatusCode(500, new { error = "Failed to update toggle", details = ex.Message });
+        }
     }
 }
 

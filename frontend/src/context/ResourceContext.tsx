@@ -28,7 +28,7 @@ export function ResourceProvider({ children }: { children: ReactNode }) {
   const [discoveredResources, setDiscoveredResources] = useState<DiscoveredResource[]>([]);
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [currentResource, setCurrentResource] = useState<AppConfigResource | null>(null);
-  const { getAccessToken, getManagementToken, isAuthenticated } = useAuth();
+  const { getAccessToken, isAuthenticated } = useAuth();
 
   // Load resources from localStorage on mount
   useEffect(() => {
@@ -73,6 +73,7 @@ export function ResourceProvider({ children }: { children: ReactNode }) {
   };
 
   // Discover resources from Azure when authenticated
+  // Backend uses OBO flow to get Management token - we just pass our API token
   const discoverResources = useCallback(async () => {
     if (!isAuthenticated) {
       console.log('[ResourceContext] Not authenticated, skipping discovery');
@@ -82,17 +83,16 @@ export function ResourceProvider({ children }: { children: ReactNode }) {
     console.log('[ResourceContext] Starting resource discovery...');
     setIsDiscovering(true);
     try {
-      // Get Azure Management token for accessing Azure Resource Manager
-      const managementToken = await getManagementToken();
-      if (!managementToken) {
-        throw new Error('Failed to acquire Azure Management token');
+      // Get API access token - backend will use OBO to get management token
+      const token = await getAccessToken();
+      if (!token) {
+        throw new Error('Failed to acquire access token');
       }
 
-      console.log('[ResourceContext] Calling /resources/discover API...');
+      console.log('[ResourceContext] Calling /resources/discover API (backend uses OBO for management token)...');
       const discovered = await apiClient.get<DiscoveredResource[]>(
         '/resources/discover',
-        undefined, // No API token needed for discovery endpoint
-        { 'X-Management-Token': managementToken } // Pass management token in custom header
+        token
       );
 
       console.log('[ResourceContext] Discovered resources:', discovered);
@@ -120,7 +120,7 @@ export function ResourceProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsDiscovering(false);
     }
-  }, [isAuthenticated, getManagementToken, resources.length]);
+  }, [isAuthenticated, getAccessToken, resources.length]);
 
   const addDiscoveredResource = (discovered: DiscoveredResource) => {
     const newResource = convertDiscoveredToAppConfig(discovered);
@@ -205,7 +205,7 @@ export function ResourceProvider({ children }: { children: ReactNode }) {
         };
       }
 
-      // Get access token for authenticated request
+      // Get access token for authenticated request - backend uses OBO for App Config token
       const token = await getAccessToken();
       if (!token) {
         return {
@@ -215,7 +215,7 @@ export function ResourceProvider({ children }: { children: ReactNode }) {
         };
       }
 
-      // Call backend API to test connection
+      // Call backend API to test connection (backend uses OBO for App Config token)
       const result = await apiClient.post<ConnectionTestResult>(
         '/resources/test-connection',
         { endpoint: data.endpoint },

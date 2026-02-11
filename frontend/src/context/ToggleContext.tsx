@@ -34,6 +34,7 @@ export function ToggleProvider({ children }: { children: ReactNode }) {
   const { user, getAccessToken } = useAuth();
 
   // Fetch toggles when currentResource changes
+  // Backend uses OBO flow to get App Config token - we just pass our API token
   const fetchToggles = useCallback(async () => {
     if (!currentResource) {
       setToggles([]);
@@ -44,6 +45,7 @@ export function ToggleProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
+      // Get API token - backend will use OBO to get App Config token
       const token = await getAccessToken();
       if (!token) {
         throw new Error('Authentication required');
@@ -77,6 +79,7 @@ export function ToggleProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Get API token - backend will use OBO to get App Config token
       const token = await getAccessToken();
       if (!token) {
         throw new Error('Authentication required');

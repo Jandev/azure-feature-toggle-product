@@ -1,9 +1,9 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { PublicClientApplication, InteractionStatus } from '@azure/msal-browser';
 import type { AccountInfo } from '@azure/msal-browser';
 import { MsalProvider, useMsal, useAccount, useIsAuthenticated } from '@azure/msal-react';
-import { msalConfig, loginRequest, azureManagementRequest } from '@/lib/authConfig';
+import { msalConfig, loginRequest, apiRequest } from '@/lib/authConfig';
 import type { User, AuthenticationState } from '@/types';
 
 // Create MSAL instance
@@ -23,7 +23,6 @@ interface AuthContextType extends AuthenticationState {
   login: () => Promise<void>;
   logout: () => void;
   getAccessToken: () => Promise<string | null>;
-  getManagementToken: () => Promise<string | null>;
   isLoading: boolean;
 }
 
@@ -148,70 +147,36 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
     });
   };
 
-  const getAccessToken = async (): Promise<string | null> => {
+  // Get access token for calling the backend API
+  // The backend will use OBO flow to exchange this for Management/App Config tokens
+  const getAccessToken = useCallback(async (): Promise<string | null> => {
     if (!account) return null;
 
     try {
-      console.log('[Auth] Acquiring access token...');
+      console.log('[Auth] Acquiring API access token...');
       const response = await instance.acquireTokenSilent({
-        scopes: loginRequest.scopes, // Use login scopes (User.Read is sufficient for validation)
+        scopes: apiRequest.scopes,
         account,
       });
-      console.log('[Auth] Access token acquired successfully');
+      console.log('[Auth] API access token acquired successfully');
       return response.accessToken;
     } catch (error) {
-      console.error('[Auth] Failed to acquire access token silently:', error);
-      // If silent token acquisition fails, try interactive
-      try {
-        console.log('[Auth] Trying interactive access token acquisition...');
-        const response = await instance.acquireTokenPopup({
-          scopes: loginRequest.scopes,
-          account,
-        });
-        console.log('[Auth] Access token acquired via popup');
-        return response.accessToken;
-      } catch (popupError) {
-        console.error('[Auth] Failed to acquire access token via popup:', popupError);
-        return null;
-      }
-    }
-  };
-
-  const getManagementToken = async (): Promise<string | null> => {
-    if (!account) return null;
-
-    try {
-      console.log('[Auth] Acquiring Azure Management token...');
-      const response = await instance.acquireTokenSilent({
-        scopes: azureManagementRequest.scopes,
+      console.error('[Auth] Failed to acquire API access token silently:', error);
+      // If silent token acquisition fails, redirect for interactive auth
+      console.log('[Auth] Redirecting for interactive API token acquisition...');
+      await instance.acquireTokenRedirect({
+        scopes: apiRequest.scopes,
         account,
       });
-      console.log('[Auth] Azure Management token acquired successfully');
-      return response.accessToken;
-    } catch (error) {
-      console.error('[Auth] Failed to acquire management token silently:', error);
-      // If silent token acquisition fails, try interactive
-      try {
-        console.log('[Auth] Trying interactive token acquisition...');
-        const response = await instance.acquireTokenPopup({
-          scopes: azureManagementRequest.scopes,
-          account,
-        });
-        console.log('[Auth] Azure Management token acquired via popup');
-        return response.accessToken;
-      } catch (popupError) {
-        console.error('[Auth] Failed to acquire management token via popup:', popupError);
-        return null;
-      }
+      return null; // Will redirect, so this won't be reached
     }
-  };
+  }, [account, instance]);
 
   const contextValue: AuthContextType = {
     ...authState,
     login,
     logout,
     getAccessToken,
-    getManagementToken,
     isLoading: inProgress !== InteractionStatus.None || authState.status === 'loading',
   };
 

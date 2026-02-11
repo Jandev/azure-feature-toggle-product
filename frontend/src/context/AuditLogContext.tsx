@@ -31,11 +31,13 @@ export function AuditLogProvider({ children }: { children: ReactNode }) {
   const { getAccessToken } = useAuth();
 
   // Fetch audit logs when filters change
+  // Backend uses OBO flow to get App Config token - we just pass our API token
   const fetchLogs = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
+      // Get API token - backend will use OBO to get App Config token
       const token = await getAccessToken();
       if (!token) {
         throw new Error('Authentication required');

@@ -4,9 +4,11 @@ using AzureFeatureToggleApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Azure AD authentication
+// Add Azure AD authentication with token acquisition for OBO flow
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"))
+    .EnableTokenAcquisitionToCallDownstreamApi()
+    .AddInMemoryTokenCaches();
 
 // Add authorization
 builder.Services.AddAuthorization();
@@ -14,6 +16,7 @@ builder.Services.AddAuthorization();
 // Add services
 builder.Services.AddSingleton<IAzureAppConfigService, AzureAppConfigService>();
 builder.Services.AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>();
+builder.Services.AddScoped<ITokenCredentialProvider, TokenCredentialProvider>();
 
 // Add controllers
 builder.Services.AddControllers();

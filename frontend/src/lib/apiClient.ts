@@ -88,11 +88,12 @@ export const apiClient = {
       token,
     }),
 
-  put: <T>(endpoint: string, data?: unknown, token?: string) =>
+  put: <T>(endpoint: string, data?: unknown, token?: string, customHeaders?: Record<string, string>) =>
     request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
       token,
+      customHeaders,
     }),
 
   delete: <T>(endpoint: string, token?: string) =>

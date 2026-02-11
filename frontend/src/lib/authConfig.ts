@@ -36,9 +36,14 @@ export const msalConfig: Configuration = {
   },
 };
 
-// Add scopes here for ID token to be used at Microsoft identity platform endpoints.
+// Scopes for login - just basic user info
 export const loginRequest: PopupRequest = {
-  scopes: ['User.Read', 'openid', 'profile', 'email'],
+  scopes: [
+    'User.Read', 
+    'openid', 
+    'profile', 
+    'email',
+  ],
 };
 
 // Add the endpoints here for Microsoft Graph API services you'd like to use.
@@ -46,13 +51,9 @@ export const graphConfig = {
   graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me',
 };
 
-// API scopes - these should match your backend API registration
+// API scopes - for calling our backend API
+// The backend will use OBO (On-Behalf-Of) flow to exchange this token
+// for Azure Management and App Configuration tokens
 export const apiRequest = {
   scopes: [`api://${import.meta.env.VITE_AZURE_CLIENT_ID || 'your-client-id'}/access_as_user`],
 };
-
-// Azure Management API scopes - for discovering Azure resources
-export const azureManagementRequest = {
-  scopes: ['https://management.azure.com/user_impersonation'],
-};
-
