@@ -163,7 +163,8 @@ resource "azuread_application_password" "main" {
 # Update redirect URIs after Container App is created
 resource "null_resource" "update_redirect_uris" {
   triggers = {
-    container_app_fqdn = azurerm_container_app.main.latest_revision_fqdn
+    # Use stable ingress FQDN, not revision FQDN which changes with each deployment
+    container_app_fqdn = azurerm_container_app.main.ingress[0].fqdn
     app_id             = azuread_application.main.client_id
   }
 
