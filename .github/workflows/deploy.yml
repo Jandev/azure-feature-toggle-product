@@ -177,7 +177,7 @@ jobs:
             ${{ needs.terraform.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:latest
           build-args: |
             VITE_AZURE_CLIENT_ID=${{ needs.terraform.outputs.client_id }}
-            VITE_AZURE_TENANT_ID=${{ needs.terraform.outputs.tenant_id }}
+            VITE_AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
