@@ -112,7 +112,7 @@ variable "key_vault_soft_delete_days" {
 }
 
 variable "grant_admin_consent" {
-  description = "Whether to automatically grant admin consent for API permissions. Requires Application Administrator or Global Administrator role."
+  description = "Whether to automatically grant admin consent for API permissions. Requires Global Administrator or Privileged Role Administrator - typically not available to CI/CD service principals. Use ./scripts/grant-admin-consent.sh instead."
   type        = bool
-  default     = true
+  default     = false
 }
