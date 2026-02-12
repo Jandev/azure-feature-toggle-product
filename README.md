@@ -19,25 +19,110 @@ A web application for managing Azure App Configuration feature flags. Auto-disco
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
 | Backend | ASP.NET Core 10.0 (C#) |
 | Auth | Azure AD, MSAL.js, OBO flow |
-| Deployment | Single Docker container (API + static frontend) |
+| Deployment | Single Docker container or Azure Container Apps |
 
-### Authentication Architecture
+## Architecture Overview
 
+```mermaid
+graph TB
+    subgraph "User Browser"
+        FE[React Frontend]
+    end
+
+    subgraph "Docker Container / Azure Container Apps"
+        API[ASP.NET Core API]
+        STATIC[Static Files]
+    end
+
+    subgraph "Azure AD"
+        AAD[App Registration]
+    end
+
+    subgraph "Azure Resources"
+        ARM[Azure Resource Manager]
+        AC1[App Configuration 1]
+        AC2[App Configuration 2]
+        ACN[App Configuration N]
+    end
+
+    FE -->|HTTPS :5173| STATIC
+    FE -->|API calls + Bearer token| API
+    FE -->|1. Login| AAD
+    AAD -->|API token| FE
+    API -->|2. OBO token exchange| AAD
+    API -->|3. List subscriptions & resources| ARM
+    API -->|4. Read/Write feature flags| AC1
+    API -->|4. Read/Write feature flags| AC2
+    API -->|4. Read/Write feature flags| ACN
 ```
-Frontend                          Backend                         Azure
-   │                                 │                               │
-   │ 1. Login ───────────────────────────────────────────────────────►
-   │◄──────────────────────────── API token (access_as_user) ────────│
-   │                                 │                               │
-   │ 2. API call + Bearer token ────►│                               │
-   │                                 │ 3. OBO: exchange for Mgmt token ─►
-   │                                 │◄───────────────────────────────│
-   │                                 │ 4. OBO: exchange for AppConfig ─►
-   │                                 │◄───────────────────────────────│
-   │◄─────────── Response ───────────│                               │
+
+## Authentication Flow
+
+The application uses the OAuth 2.0 On-Behalf-Of (OBO) flow for secure delegated access:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant AzureAD
+    participant AzureAPIs
+
+    User->>Frontend: 1. Click Login
+    Frontend->>AzureAD: 2. Redirect to login
+    AzureAD->>Frontend: 3. Return API token (access_as_user scope)
+    
+    User->>Frontend: 4. Request feature flags
+    Frontend->>Backend: 5. API call + Bearer token
+    
+    Backend->>AzureAD: 6. OBO: Exchange for Management API token
+    AzureAD->>Backend: 7. Management token
+    Backend->>AzureAPIs: 8. List App Config resources
+    AzureAPIs->>Backend: 9. Resource list
+    
+    Backend->>AzureAD: 10. OBO: Exchange for App Config token
+    AzureAD->>Backend: 11. App Config token
+    Backend->>AzureAPIs: 12. Get feature flags
+    AzureAPIs->>Backend: 13. Feature flag data
+    
+    Backend->>Frontend: 14. Return aggregated response
+    Frontend->>User: 15. Display feature flags
 ```
 
-The frontend only acquires one token. The backend exchanges it via OBO for Azure Management and App Configuration tokens.
+**Key Points:**
+- Frontend acquires only ONE token (`api://{client-id}/access_as_user`)
+- Backend exchanges this token via OBO for Azure Management and App Configuration tokens
+- User's permissions are preserved through the entire flow (delegated access)
+
+## API Endpoints
+
+```mermaid
+graph LR
+    subgraph "Public"
+        HEALTH[GET /api/health]
+    end
+
+    subgraph "Authenticated Endpoints"
+        DISC[GET /api/resources/discover]
+        SUBS[GET /api/subscriptions]
+        TEST[POST /api/resources/test-connection]
+        PERM[POST /api/resources/{id}/check-permissions]
+        
+        LIST[GET /api/toggles/{endpoint}]
+        TOGGLE[PUT /api/toggles/{endpoint}/{name}]
+        
+        AUDIT[GET /api/auditlogs]
+    end
+
+    HEALTH --> READY[Health Check]
+    DISC --> RESOURCES[List App Configs]
+    SUBS --> SUBSCRIPTIONS[List Subscriptions]
+    TEST --> CONNECTION[Test Connectivity]
+    PERM --> PERMISSIONS[Check User Roles]
+    LIST --> FLAGS[Get Feature Flags]
+    TOGGLE --> UPDATE[Enable/Disable Flag]
+    AUDIT --> LOGS[Get Audit History]
+```
 
 ## Prerequisites
 
@@ -100,6 +185,21 @@ docker run -d -p 5173:5173 \
 
 Open http://localhost:5173
 
+### Deploy to Azure
+
+See [terraform/README.md](terraform/README.md) for deploying to Azure Container Apps with:
+- Azure Container Registry
+- Azure Key Vault (secure secret storage)
+- Managed Identity
+- Auto-created App Registration
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars
+terraform init && terraform apply
+```
+
 ### Local Development
 
 **Frontend:**
@@ -141,10 +241,57 @@ dotnet run
 │   ├── Controllers/       # REST endpoints
 │   ├── Services/          # Azure SDK integration, OBO flow
 │   └── appsettings.json
+├── terraform/             # Infrastructure as Code
+│   ├── *.tf               # Terraform configurations
+│   └── README.md          # Deployment guide
 ├── product-plan/          # DesignOS design artifacts
 ├── Dockerfile             # Multi-stage build
 └── README.md
 ```
+
+## User Flow
+
+```mermaid
+flowchart TD
+    START([User visits app]) --> LOGIN{Logged in?}
+    LOGIN -->|No| AUTH[Redirect to Azure AD]
+    AUTH --> CONSENT{First time?}
+    CONSENT -->|Yes| GRANT[Grant consent]
+    GRANT --> TOKEN[Receive token]
+    CONSENT -->|No| TOKEN
+    TOKEN --> LOGIN
+    
+    LOGIN -->|Yes| DISCOVER[Auto-discover App Configs]
+    DISCOVER --> SELECT[Select resource]
+    SELECT --> LOAD[Load feature flags]
+    LOAD --> VIEW[View flags list]
+    
+    VIEW --> ACTION{User action}
+    ACTION -->|Toggle| CHECK{Has write permission?}
+    CHECK -->|No| READONLY[Show read-only badge]
+    READONLY --> VIEW
+    CHECK -->|Yes| PROD{Is production?}
+    PROD -->|Yes| CONFIRM[Show confirmation dialog]
+    CONFIRM -->|Cancel| VIEW
+    CONFIRM -->|Confirm| UPDATE[Update flag state]
+    PROD -->|No| UPDATE
+    UPDATE --> AUDIT[Log to audit trail]
+    AUDIT --> VIEW
+    
+    ACTION -->|View audit| LOGS[Show audit logs]
+    LOGS --> VIEW
+    
+    ACTION -->|Logout| LOGOUT[Clear session]
+    LOGOUT --> START
+```
+
+## Security Considerations
+
+- **No secrets in frontend**: Client secret is backend-only
+- **Delegated access**: User's own permissions are enforced
+- **RBAC**: Azure roles control read/write access
+- **Audit logging**: All changes are tracked
+- **HTTPS**: Enforced in production deployments
 
 ## License
 
