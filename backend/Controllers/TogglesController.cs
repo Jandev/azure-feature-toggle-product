@@ -54,7 +54,7 @@ public class TogglesController : ControllerBase
         }
     }
 
-    [HttpPut("{toggleId}")]
+    [HttpPut("{*toggleId}")]
     public async Task<ActionResult<FeatureToggle>> UpdateToggle(
         string toggleId,
         [FromBody] UpdateToggleRequest request)
