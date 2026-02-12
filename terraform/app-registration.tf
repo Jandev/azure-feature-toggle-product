@@ -166,6 +166,8 @@ resource "null_resource" "update_redirect_uris" {
     # Use stable ingress FQDN, not revision FQDN which changes with each deployment
     container_app_fqdn = azurerm_container_app.main.ingress[0].fqdn
     app_id             = azuread_application.main.client_id
+    # Include additional URIs in trigger so changes are detected
+    additional_uris    = join(",", var.additional_redirect_uris)
   }
 
   provisioner "local-exec" {
@@ -173,20 +175,18 @@ resource "null_resource" "update_redirect_uris" {
       # Get the Container App URL
       CONTAINER_APP_URL="https://${azurerm_container_app.main.ingress[0].fqdn}"
       
-      # Build the redirect URIs list
-      REDIRECT_URIS=$(cat <<EOF
-      [
-        "$CONTAINER_APP_URL",
-        ${join(",\n        ", formatlist("\"%s\"", var.additional_redirect_uris))}
-      ]
-      EOF
-      )
+      # Get the app object ID (different from client_id)
+      APP_OBJECT_ID=$(az ad app show --id ${azuread_application.main.client_id} --query id -o tsv)
       
-      # Retry loop for updating the app (in case of Azure AD replication lag)
+      # Build redirect URIs JSON array
+      REDIRECT_URIS='["'$CONTAINER_APP_URL'","${join("\",\"", var.additional_redirect_uris)}"]'
+      
+      # Retry loop for updating the app via Graph API (in case of Azure AD replication lag)
       for i in 1 2 3; do
-        az ad app update \
-          --id ${azuread_application.main.client_id} \
-          --set spa/redirectUris="$REDIRECT_URIS" && break
+        az rest --method PATCH \
+          --uri "https://graph.microsoft.com/v1.0/applications/$APP_OBJECT_ID" \
+          --headers "Content-Type=application/json" \
+          --body "{\"spa\":{\"redirectUris\":$REDIRECT_URIS}}" && break
         echo "Retry $i failed, waiting 10 seconds..."
         sleep 10
       done
