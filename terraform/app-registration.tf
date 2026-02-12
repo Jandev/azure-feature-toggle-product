@@ -104,16 +104,13 @@ resource "azuread_application" "main" {
     }
   }
 
-  # Set the Application ID URI
-  identifier_uris = ["api://${random_uuid.app_id_placeholder.result}"]
+  # Note: identifier_uris will be set after creation via null_resource
+  # because Azure AD requires the URI to match the actual client_id
 
   lifecycle {
     ignore_changes = [identifier_uris]
   }
 }
-
-# Placeholder for Application ID URI (will be updated after creation)
-resource "random_uuid" "app_id_placeholder" {}
 
 # Update the Application ID URI to use the actual client ID
 resource "null_resource" "update_app_id_uri" {
