@@ -77,6 +77,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
+          set +e
           terraform plan \
             -var="environment=${{ inputs.environment }}" \
             -var="project_name=feature-toggle" \
@@ -85,7 +86,14 @@ jobs:
             -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
             -out=tfplan \
             -detailed-exitcode
-        continue-on-error: true
+          exitcode=$?
+          echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+          # Exit code 0 = no changes, 2 = changes present (both are success)
+          # Exit code 1 = error
+          if [ $exitcode -eq 1 ]; then
+            exit 1
+          fi
+          exit 0
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -93,7 +101,7 @@ jobs:
           ARM_USE_OIDC: true
 
       - name: Terraform Apply
-        if: inputs.action == 'deploy' && steps.plan.outcome == 'success'
+        if: inputs.action == 'deploy' && steps.plan.outputs.exitcode != '1'
         run: terraform apply -auto-approve tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
