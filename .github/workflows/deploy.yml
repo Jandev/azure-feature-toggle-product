@@ -81,6 +81,8 @@ jobs:
             -var="environment=${{ inputs.environment }}" \
             -var="project_name=feature-toggle" \
             -var="location=${{ vars.AZURE_LOCATION || 'westeurope' }}" \
+            -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
             -out=tfplan \
             -detailed-exitcode
         continue-on-error: true
@@ -106,6 +108,8 @@ jobs:
             -var="environment=${{ inputs.environment }}" \
             -var="project_name=feature-toggle" \
             -var="location=${{ vars.AZURE_LOCATION || 'westeurope' }}" \
+            -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
             -auto-approve
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
