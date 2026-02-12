@@ -15,16 +15,19 @@ output "container_app_name" {
 output "client_id" {
   description = "Azure AD Application (Client) ID"
   value       = azuread_application.main.client_id
+  sensitive   = true
 }
 
 output "tenant_id" {
   description = "Azure AD Tenant ID"
   value       = var.tenant_id
+  sensitive   = true
 }
 
 output "app_id_uri" {
   description = "Application ID URI for the API"
   value       = "api://${azuread_application.main.client_id}"
+  sensitive   = true
 }
 
 output "client_secret_name" {
@@ -36,21 +39,25 @@ output "client_secret_name" {
 output "key_vault_name" {
   description = "Name of the Key Vault"
   value       = azurerm_key_vault.main.name
+  sensitive   = true
 }
 
 output "key_vault_uri" {
   description = "URI of the Key Vault"
   value       = azurerm_key_vault.main.vault_uri
+  sensitive   = true
 }
 
 output "managed_identity_name" {
   description = "Name of the managed identity used by Container App"
   value       = azurerm_user_assigned_identity.container_app.name
+  sensitive   = true
 }
 
 output "managed_identity_client_id" {
   description = "Client ID of the managed identity"
   value       = azurerm_user_assigned_identity.container_app.client_id
+  sensitive   = true
 }
 
 # Note: The actual client secret value is stored in Key Vault
@@ -67,9 +74,10 @@ output "resource_group_location" {
   value       = azurerm_resource_group.main.location
 }
 
-# Summary output for easy copy-paste
+# Summary output for easy copy-paste (marked sensitive to hide from CI logs)
 output "summary" {
   description = "Summary of deployed resources"
+  sensitive   = true
   value       = <<-EOT
     
     ============================================
