@@ -107,10 +107,10 @@ graph LR
         DISC[GET /api/resources/discover]
         SUBS[GET /api/subscriptions]
         TEST[POST /api/resources/test-connection]
-        PERM[POST /api/resources/{id}/check-permissions]
+        PERM[POST /api/resources/id/check-permissions]
 
-        LIST[GET /api/toggles/{endpoint}]
-        TOGGLE[PUT /api/toggles/{endpoint}/{name}]
+        LIST[GET /api/toggles/endpoint]
+        TOGGLE[PUT /api/toggles/endpoint/name]
 
         AUDIT[GET /api/auditlogs]
     end
