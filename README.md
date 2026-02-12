@@ -4,6 +4,17 @@ A web application for managing Azure App Configuration feature flags. Auto-disco
 
 > **Note**: This project was generated using [DesignOS](https://buildermethods.com/design-os). Design artifacts are in the `product-plan/` folder.
 
+## Screenshot
+
+![Dashboard](images/dashboard.png)
+
+The dashboard provides a unified interface for managing feature flags across your Azure App Configuration resources:
+
+- **Automatic Resource Discovery**: On login, the app automatically discovers all Azure App Configuration resources you have access to across your subscriptions.
+- **Resource Selection**: Use the dropdown at the top to switch between different App Configuration resources. The environment badge (e.g., "development") helps identify the resource context.
+- **Feature Toggle Management**: View all feature flags with their current state (Enabled/Disabled). Toggle flags on or off with a single click.
+- **Audit Log**: Navigate to the Audit Log page to view the complete history of changes, including who made each change and when.
+
 ## Features
 
 - Auto-discover Azure App Configuration resources across subscriptions
