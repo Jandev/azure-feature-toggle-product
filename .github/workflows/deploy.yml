@@ -35,7 +35,6 @@ env:
 permissions:
   id-token: write
   contents: read
-  packages: write
 
 jobs:
   # Run Terraform to provision/update infrastructure
@@ -168,26 +167,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Tag image as latest
-        env:
-          IMAGE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
-          IMAGE_NAME_LOWER: ${{ format('{0}/{1}', env.REGISTRY, github.repository) }}
-        run: |
-          IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME_LOWER" | tr '[:upper:]' '[:lower:]')
-          # Pull the image built by CI using the commit SHA tag
-          docker pull ${IMAGE_NAME_LOWER}:${IMAGE_SHA}
-          # Tag it as latest
-          docker tag ${IMAGE_NAME_LOWER}:${IMAGE_SHA} ${IMAGE_NAME_LOWER}:latest
-          # Push the latest tag
-          docker push ${IMAGE_NAME_LOWER}:latest
-
       - name: Deploy to Container Apps
         env:
           IMAGE_NAME_LOWER: ${{ format('{0}/{1}', env.REGISTRY, github.repository) }}
@@ -201,7 +180,6 @@ jobs:
       - name: Get App URL
         id: app-url
         env:
-          IMAGE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
           IMAGE_NAME_LOWER: ${{ format('{0}/{1}', env.REGISTRY, github.repository) }}
         run: |
           IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME_LOWER" | tr '[:upper:]' '[:lower:]')
@@ -215,4 +193,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Application URL:** https://$URL" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Docker Image:** \`${IMAGE_NAME_LOWER}:${IMAGE_SHA}\` (tagged as \`latest\`)" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Image:** \`${IMAGE_NAME_LOWER}:latest\`" >> $GITHUB_STEP_SUMMARY
