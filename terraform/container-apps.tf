@@ -98,19 +98,17 @@ resource "azurerm_container_app" "main" {
 
       # Health probes
       liveness_probe {
-        transport                = "HTTP"
-        path                     = "/api/health"
-        port                     = 5173
-        initial_delay_in_seconds = 10
-        interval_seconds         = 30
+        transport        = "HTTP"
+        path             = "/api/health"
+        port             = 5173
+        interval_seconds = 30
       }
 
       readiness_probe {
-        transport                = "HTTP"
-        path                     = "/api/health"
-        port                     = 5173
-        initial_delay_in_seconds = 5
-        interval_seconds         = 10
+        transport        = "HTTP"
+        path             = "/api/health"
+        port             = 5173
+        interval_seconds = 10
       }
     }
   }
