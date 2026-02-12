@@ -120,9 +120,18 @@ resource "null_resource" "update_app_id_uri" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      az ad app update \
-        --id ${azuread_application.main.client_id} \
-        --identifier-uris "api://${azuread_application.main.client_id}"
+      # Wait for Azure AD replication (can take up to 30 seconds)
+      echo "Waiting for Azure AD replication..."
+      sleep 30
+      
+      # Retry loop for updating the app
+      for i in 1 2 3; do
+        az ad app update \
+          --id ${azuread_application.main.client_id} \
+          --identifier-uris "api://${azuread_application.main.client_id}" && break
+        echo "Retry $i failed, waiting 10 seconds..."
+        sleep 10
+      done
     EOT
   }
 
@@ -172,16 +181,21 @@ resource "null_resource" "update_redirect_uris" {
       EOF
       )
       
-      # Update the app registration with the new redirect URIs
-      az ad app update \
-        --id ${azuread_application.main.client_id} \
-        --set spa/redirectUris="$REDIRECT_URIS"
+      # Retry loop for updating the app (in case of Azure AD replication lag)
+      for i in 1 2 3; do
+        az ad app update \
+          --id ${azuread_application.main.client_id} \
+          --set spa/redirectUris="$REDIRECT_URIS" && break
+        echo "Retry $i failed, waiting 10 seconds..."
+        sleep 10
+      done
     EOT
   }
 
   depends_on = [
     azurerm_container_app.main,
-    azuread_application.main
+    azuread_application.main,
+    null_resource.update_app_id_uri
   ]
 }
 
