@@ -3,21 +3,12 @@ import type { ReactNode } from 'react';
 import { PublicClientApplication, InteractionStatus } from '@azure/msal-browser';
 import type { AccountInfo } from '@azure/msal-browser';
 import { MsalProvider, useMsal, useAccount, useIsAuthenticated } from '@azure/msal-react';
-import { msalConfig, loginRequest, apiRequest } from '@/lib/authConfig';
+import { createMsalConfig, loginRequest, createApiRequest } from '@/lib/authConfig';
+import { loadConfig, getConfig } from '@/lib/config';
 import type { User, AuthenticationState } from '@/types';
 
-// Create MSAL instance
-const msalInstance = new PublicClientApplication(msalConfig);
-
-// Initialize MSAL - this will be a promise that resolves when ready
-const msalInitPromise = msalInstance.initialize();
-
-// Handle redirect promise to process authentication callbacks
-msalInitPromise.then(() => {
-  msalInstance.handleRedirectPromise().catch((error) => {
-    console.error('Error handling redirect:', error);
-  });
-});
+// MSAL instance - will be created after config is loaded
+let msalInstance: PublicClientApplication | null = null;
 
 interface AuthContextType extends AuthenticationState {
   login: () => Promise<void>;
@@ -30,14 +21,47 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
-    msalInitPromise.then(() => {
-      setIsInitialized(true);
-    });
+    async function initialize() {
+      try {
+        // Load runtime config first
+        const config = await loadConfig();
+        console.log('[Auth] Config loaded, creating MSAL instance');
+        
+        // Create MSAL instance with runtime config
+        const msalConfig = createMsalConfig(config);
+        msalInstance = new PublicClientApplication(msalConfig);
+        
+        // Initialize MSAL
+        await msalInstance.initialize();
+        
+        // Handle redirect promise to process authentication callbacks
+        await msalInstance.handleRedirectPromise();
+        
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        setInitError(error instanceof Error ? error.message : 'Failed to initialize authentication');
+      }
+    }
+    
+    initialize();
   }, []);
 
-  if (!isInitialized) {
+  if (initError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-stone-950">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400">Authentication Error</p>
+          <p className="mt-2 text-slate-600 dark:text-slate-400">{initError}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isInitialized || !msalInstance) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-stone-950">
         <div className="text-center">
@@ -156,6 +180,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
 
     try {
       console.log('[Auth] Acquiring API access token...');
+      const apiRequest = createApiRequest(getConfig());
       const response = await instance.acquireTokenSilent({
         scopes: apiRequest.scopes,
         account,
@@ -166,6 +191,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
       console.error('[Auth] Failed to acquire API access token silently:', error);
       // If silent token acquisition fails, redirect for interactive auth
       console.log('[Auth] Redirecting for interactive API token acquisition...');
+      const apiRequest = createApiRequest(getConfig());
       await instance.acquireTokenRedirect({
         scopes: apiRequest.scopes,
         account,

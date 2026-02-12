@@ -65,9 +65,6 @@ jobs:
 
       - name: Type check
         run: npm run build -- --mode production
-        env:
-          VITE_AZURE_CLIENT_ID: 'placeholder-for-ci'
-          VITE_AZURE_TENANT_ID: 'placeholder-for-ci'
 
   # Validate Terraform configuration
   terraform:
@@ -136,9 +133,6 @@ jobs:
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            VITE_AZURE_CLIENT_ID=placeholder-will-be-set-at-deploy
-            VITE_AZURE_TENANT_ID=placeholder-will-be-set-at-deploy
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

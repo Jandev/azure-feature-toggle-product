@@ -187,9 +187,6 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.workflow_run.head_sha || github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          build-args: |
-            VITE_AZURE_CLIENT_ID=${{ needs.terraform.outputs.client_id }}
-            VITE_AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
