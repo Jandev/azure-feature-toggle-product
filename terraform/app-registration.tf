@@ -167,7 +167,7 @@ resource "null_resource" "update_redirect_uris" {
     container_app_fqdn = azurerm_container_app.main.ingress[0].fqdn
     app_id             = azuread_application.main.client_id
     # Include additional URIs in trigger so changes are detected
-    additional_uris    = join(",", var.additional_redirect_uris)
+    additional_uris = join(",", var.additional_redirect_uris)
   }
 
   provisioner "local-exec" {
