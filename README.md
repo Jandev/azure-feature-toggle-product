@@ -2,7 +2,7 @@
 
 A web application for managing Azure App Configuration feature flags. Auto-discovers resources, provides toggle management with audit logging, and uses Azure RBAC for access control.
 
-> **Note**: This project was generated using [DesignOS](https://designos.dev). Design artifacts are in the `product-plan/` folder.
+> **Note**: This project was generated using [DesignOS](https://buildermethods.com/design-os). Design artifacts are in the `product-plan/` folder.
 
 ## Features
 
@@ -14,12 +14,12 @@ A web application for managing Azure App Configuration feature flags. Auto-disco
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
-| Backend | ASP.NET Core 10.0 (C#) |
-| Auth | Azure AD, MSAL.js, OBO flow |
-| Deployment | Single Docker container or Azure Container Apps |
+| Layer      | Technology                                          |
+| ---------- | --------------------------------------------------- |
+| Frontend   | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Backend    | ASP.NET Core 10.0 (C#)                              |
+| Auth       | Azure AD, MSAL.js, OBO flow                         |
+| Deployment | Single Docker container or Azure Container Apps     |
 
 ## Architecture Overview
 
@@ -71,25 +71,26 @@ sequenceDiagram
     User->>Frontend: 1. Click Login
     Frontend->>AzureAD: 2. Redirect to login
     AzureAD->>Frontend: 3. Return API token (access_as_user scope)
-    
+
     User->>Frontend: 4. Request feature flags
     Frontend->>Backend: 5. API call + Bearer token
-    
+
     Backend->>AzureAD: 6. OBO: Exchange for Management API token
     AzureAD->>Backend: 7. Management token
     Backend->>AzureAPIs: 8. List App Config resources
     AzureAPIs->>Backend: 9. Resource list
-    
+
     Backend->>AzureAD: 10. OBO: Exchange for App Config token
     AzureAD->>Backend: 11. App Config token
     Backend->>AzureAPIs: 12. Get feature flags
     AzureAPIs->>Backend: 13. Feature flag data
-    
+
     Backend->>Frontend: 14. Return aggregated response
     Frontend->>User: 15. Display feature flags
 ```
 
 **Key Points:**
+
 - Frontend acquires only ONE token (`api://{client-id}/access_as_user`)
 - Backend exchanges this token via OBO for Azure Management and App Configuration tokens
 - User's permissions are preserved through the entire flow (delegated access)
@@ -107,10 +108,10 @@ graph LR
         SUBS[GET /api/subscriptions]
         TEST[POST /api/resources/test-connection]
         PERM[POST /api/resources/{id}/check-permissions]
-        
+
         LIST[GET /api/toggles/{endpoint}]
         TOGGLE[PUT /api/toggles/{endpoint}/{name}]
-        
+
         AUDIT[GET /api/auditlogs]
     end
 
@@ -138,32 +139,35 @@ graph LR
 2. Configure:
 
 **Redirect URIs (SPA):**
+
 - `http://localhost:5173`
 
 **Expose an API:**
+
 - URI: `api://{client-id}`
 - Scope: `access_as_user`
 
 **API Permissions (Delegated):**
 
-| API | Permission |
-|-----|------------|
-| Microsoft Graph | `User.Read`, `openid`, `profile`, `email` |
-| Azure Service Management | `user_impersonation` |
-| Azure App Configuration | `KeyValue.Read`, `KeyValue.Write` |
+| API                      | Permission                                |
+| ------------------------ | ----------------------------------------- |
+| Microsoft Graph          | `User.Read`, `openid`, `profile`, `email` |
+| Azure Service Management | `user_impersonation`                      |
+| Azure App Configuration  | `KeyValue.Read`, `KeyValue.Write`         |
 
 **Client Secret:**
+
 - Create one (required for OBO flow)
 
 **Grant admin consent** for all permissions.
 
 ### Required Azure Roles
 
-| Role | Scope | Purpose |
-|------|-------|---------|
-| Reader | Subscription | Discover App Config resources |
-| App Configuration Data Reader | App Config resource | Read feature flags |
-| App Configuration Data Owner | App Config resource | Read/write feature flags |
+| Role                          | Scope               | Purpose                       |
+| ----------------------------- | ------------------- | ----------------------------- |
+| Reader                        | Subscription        | Discover App Config resources |
+| App Configuration Data Reader | App Config resource | Read feature flags            |
+| App Configuration Data Owner  | App Config resource | Read/write feature flags      |
 
 ## Quick Start
 
@@ -188,6 +192,7 @@ Open http://localhost:5173
 ### Deploy to Azure
 
 See [terraform/README.md](terraform/README.md) for deploying to Azure Container Apps with:
+
 - Azure Container Registry
 - Azure Key Vault (secure secret storage)
 - Managed Identity
@@ -203,6 +208,7 @@ terraform init && terraform apply
 ### Local Development
 
 **Frontend:**
+
 ```bash
 cd frontend
 cp .env.example .env.local
@@ -211,6 +217,7 @@ npm install && npm run dev
 ```
 
 **Backend:**
+
 ```bash
 cd backend
 dotnet user-secrets set "AzureAd:TenantId" "<tenant-id>"
@@ -221,12 +228,12 @@ dotnet run
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `AzureAd__TenantId` | Azure AD tenant ID | Yes |
-| `AzureAd__ClientId` | App registration client ID | Yes |
-| `AzureAd__ClientSecret` | Client secret for OBO flow | Yes |
-| `AzureAd__Instance` | `https://login.microsoftonline.com/` | Yes |
+| Variable                | Description                          | Required |
+| ----------------------- | ------------------------------------ | -------- |
+| `AzureAd__TenantId`     | Azure AD tenant ID                   | Yes      |
+| `AzureAd__ClientId`     | App registration client ID           | Yes      |
+| `AzureAd__ClientSecret` | Client secret for OBO flow           | Yes      |
+| `AzureAd__Instance`     | `https://login.microsoftonline.com/` | Yes      |
 
 ## Project Structure
 
@@ -260,12 +267,12 @@ flowchart TD
     GRANT --> TOKEN[Receive token]
     CONSENT -->|No| TOKEN
     TOKEN --> LOGIN
-    
+
     LOGIN -->|Yes| DISCOVER[Auto-discover App Configs]
     DISCOVER --> SELECT[Select resource]
     SELECT --> LOAD[Load feature flags]
     LOAD --> VIEW[View flags list]
-    
+
     VIEW --> ACTION{User action}
     ACTION -->|Toggle| CHECK{Has write permission?}
     CHECK -->|No| READONLY[Show read-only badge]
@@ -277,10 +284,10 @@ flowchart TD
     PROD -->|No| UPDATE
     UPDATE --> AUDIT[Log to audit trail]
     AUDIT --> VIEW
-    
+
     ACTION -->|View audit| LOGS[Show audit logs]
     LOGS --> VIEW
-    
+
     ACTION -->|Logout| LOGOUT[Clear session]
     LOGOUT --> START
 ```
