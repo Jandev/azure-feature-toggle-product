@@ -200,21 +200,42 @@ resource "null_resource" "update_redirect_uris" {
   ]
 }
 
-# Grant admin consent for API permissions (optional - may require elevated privileges)
-# Uncomment if you have the necessary permissions
-# resource "null_resource" "grant_admin_consent" {
-#   triggers = {
-#     app_id = azuread_application.main.client_id
-#   }
-#
-#   provisioner "local-exec" {
-#     command = <<-EOT
-#       az ad app permission admin-consent --id ${azuread_application.main.client_id}
-#     EOT
-#   }
-#
-#   depends_on = [
-#     azuread_service_principal.main,
-#     null_resource.update_redirect_uris
-#   ]
-# }
+# Grant admin consent for API permissions
+# Controlled by var.grant_admin_consent (default: true)
+# Requires Application Administrator or Global Administrator role
+resource "null_resource" "grant_admin_consent" {
+  count = var.grant_admin_consent ? 1 : 0
+
+  triggers = {
+    app_id = azuread_application.main.client_id
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Granting admin consent for API permissions..."
+      # Wait for service principal to propagate
+      sleep 10
+      
+      # Retry loop for granting admin consent
+      for i in 1 2 3; do
+        if az ad app permission admin-consent --id ${azuread_application.main.client_id} 2>/dev/null; then
+          echo "Admin consent granted successfully"
+          exit 0
+        fi
+        echo "Retry $i failed, waiting 10 seconds..."
+        sleep 10
+      done
+      
+      echo "Warning: Could not grant admin consent automatically."
+      echo "You may need to run: ./scripts/grant-admin-consent.sh"
+      echo "Or grant consent manually via Azure Portal."
+      # Don't fail the deployment - consent can be granted manually
+      exit 0
+    EOT
+  }
+
+  depends_on = [
+    azuread_service_principal.main,
+    null_resource.update_redirect_uris
+  ]
+}

@@ -65,3 +65,7 @@ terraform/override.tf.json
 terraform/*_override.tf
 terraform/*_override.tf.json
 .next
+
+# Setup script config files
+.azure-ad-config.json
+.cicd-config.json

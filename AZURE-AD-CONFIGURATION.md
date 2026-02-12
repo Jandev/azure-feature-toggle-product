@@ -1,252 +1,237 @@
-# Azure AD Configuration - Complete ✅
+# Azure AD Configuration
 
-## Configuration Summary
+This guide explains how to configure Azure AD authentication for the Azure Feature Toggle Manager.
 
-All Azure AD settings have been configured and persisted for the Azure Feature Toggle Tool.
+## Quick Start (Automated)
 
-### Tenant Information
-
-- **Tenant ID**: `YOUR_TENANT_ID`
-- **Tenant Domain**: `YOUR_TENANT_DOMAIN`
-- **Tenant Display Name**: YOUR_ORGANIZATION
-
-### App Registration Details
-
-- **Application Name**: FeatureFlagToggler
-- **Application (Client) ID**: `YOUR_CLIENT_ID`
-- **Object ID**: `YOUR_APP_OBJECT_ID`
-- **Service Principal ID**: `YOUR_SERVICE_PRINCIPAL_ID`
-- **Sign-in Audience**: AzureADMyOrg (Single tenant)
-
-### Configured User
-
-- **Name**: YOUR_NAME
-- **User Principal Name**: `YOUR_UPN`
-- **Email**: `YOUR_EMAIL`
-- **Object ID**: `YOUR_USER_OBJECT_ID`
-- **Assignment Status**: ✅ Assigned to application
-- **Assigned Date**: 2026-02-05 20:16:39 UTC
-
-## What Was Configured
-
-### 1. ✅ SPA Redirect URIs
-
-Configured for local development:
-
-- `http://localhost:5173`
-- `http://localhost:5173/auth/callback`
-
-### 2. ✅ API Permissions (Microsoft Graph)
-
-All delegated permissions configured with admin consent granted:
-
-- **User.Read** (e1fe6dd8-ba31-4d61-89e7-88639da4683d) - Read user profile
-- **openid** (37f7f235-527c-4136-accd-4a02d197296e) - Sign users in
-- **profile** (14dad69e-099b-42c9-810b-d002981feec1) - View users' basic profile
-- **email** (64a6cdd6-aab1-4aaf-94b8-3cc8405e90d0) - View users' email address
-
-**Admin Consent**: ✅ Granted
-
-### 3. ✅ User Assignment
-
-YOUR_NAME is assigned to the application with default user access.
-
-### 4. ✅ Application Configuration Files
-
-**Frontend** (`/frontend/.env.local`):
-
-```env
-VITE_AZURE_CLIENT_ID=YOUR_CLIENT_ID
-VITE_AZURE_TENANT_ID=YOUR_TENANT_ID
-VITE_API_BASE_URL=http://localhost:5000
-```
-
-**Backend** (`/backend/appsettings.json`):
-
-```json
-{
-  "AzureAd": {
-    "Instance": "https://login.microsoftonline.com/",
-    "TenantId": "YOUR_TENANT_ID",
-    "ClientId": "YOUR_CLIENT_ID",
-    "Audience": "YOUR_CLIENT_ID"
-  }
-}
-```
-
-## Testing the Configuration
-
-### Start the Application
+The easiest way to set up Azure AD for local development is using the setup script:
 
 ```bash
-# Terminal 1: Start backend
-cd backend
-dotnet run
-# Should start on: http://localhost:5000
-
-# Terminal 2: Start frontend
-cd frontend
-npm run dev
-# Should start on: http://localhost:5173
+./scripts/setup-azure-ad.sh
 ```
 
-### Test Authentication Flow
+This script will:
+1. Create an Azure AD application registration
+2. Configure SPA redirect URIs for local development
+3. Set up required API permissions
+4. Create a service principal
+5. Grant admin consent (if you have permissions)
+6. Create local `.env` files with the configuration
 
-1. **Navigate to** http://localhost:5173
-2. **Expected**: Redirected to `/login` page
-3. **Click**: "Sign in with Microsoft" button
-4. **Expected**: Microsoft login popup appears
-5. **Login with**: YOUR_EMAIL
-6. **Expected**: OAuth consent screen (first time only)
-7. **Expected**: Successful redirect to `/dashboard`
-8. **Verify**: User name "YOUR_NAME" appears in top navigation
-9. **Verify**: User can navigate between pages
-10. **Test**: Logout button returns to login page
-
-### Expected User Experience
-
-```
-┌─────────────────────────────────────┐
-│  Azure Feature Toggle Tool          │
-│                                     │
-│  [Sign in with Microsoft]           │
-└─────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────┐
-│  Microsoft Login                    │
-│  YOUR_EMAIL              │
-│  [Password field]                   │
-│  [Sign in]                          │
-└─────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────┐
-│  Dashboard - YOUR_NAME ▾         │
-│  ├─ Dashboard                       │
-│  ├─ Resources                       │
-│  ├─ Audit Log                       │
-│  └─ Settings                        │
-└─────────────────────────────────────┘
-```
-
-## Future Enhancements (Optional)
-
-### Custom App Roles
-
-For role-based access control, you can add custom app roles:
-
-```json
-{
-  "appRoles": [
-    {
-      "allowedMemberTypes": ["User"],
-      "description": "Administrators can view and modify all feature toggles",
-      "displayName": "Administrator",
-      "id": "<unique-guid>",
-      "isEnabled": true,
-      "value": "Admin"
-    },
-    {
-      "allowedMemberTypes": ["User"],
-      "description": "Read-only users can only view feature toggles",
-      "displayName": "Read Only",
-      "id": "<unique-guid>",
-      "isEnabled": true,
-      "value": "ReadOnly"
-    }
-  ]
-}
-```
-
-Then assign users to specific roles via:
+### Script Options
 
 ```bash
-az rest --method POST \
-  --uri "https://graph.microsoft.com/v1.0/servicePrincipals/YOUR_SERVICE_PRINCIPAL_ID/appRoleAssignments" \
-  --body '{"principalId":"YOUR_USER_OBJECT_ID","resourceId":"YOUR_SERVICE_PRINCIPAL_ID","appRoleId":"<role-guid>"}'
+./scripts/setup-azure-ad.sh [OPTIONS]
+
+Options:
+  --app-name NAME        Application display name (default: FeatureFlagToggler)
+  --skip-env-files       Skip creating .env files
+  --dry-run              Show what would be done without making changes
+  -h, --help             Show help message
 ```
 
-### Production Redirect URIs
+### Prerequisites
 
-When deploying to production, add your production URLs:
+- Azure CLI installed and logged in (`az login`)
+- Application Administrator role (to create app registrations)
+
+---
+
+## Manual Setup
+
+If you prefer to set up Azure AD manually, follow these steps:
+
+### Step 1: Create App Registration
 
 ```bash
+# Login to Azure CLI
+az login
+
+# Create the application
+az ad app create \
+  --display-name "FeatureFlagToggler" \
+  --sign-in-audience "AzureADMyOrg" \
+  --query "{appId:appId,id:id}" \
+  -o json
+```
+
+### Step 2: Configure Redirect URIs
+
+```bash
+# Get the app object ID
+APP_CLIENT_ID="<your-client-id>"
+APP_OBJECT_ID=$(az ad app show --id $APP_CLIENT_ID --query id -o tsv)
+
+# Configure SPA redirect URIs
 az rest --method PATCH \
-  --uri "https://graph.microsoft.com/v1.0/applications/YOUR_APP_OBJECT_ID" \
+  --uri "https://graph.microsoft.com/v1.0/applications/$APP_OBJECT_ID" \
+  --headers "Content-Type=application/json" \
   --body '{
     "spa": {
       "redirectUris": [
         "http://localhost:5173",
-        "http://localhost:5173/auth/callback",
-        "https://your-production-domain.com",
-        "https://your-production-domain.com/auth/callback"
+        "http://localhost:5173/auth/callback"
       ]
     }
   }'
 ```
 
+### Step 3: Create Service Principal
+
+```bash
+az ad sp create --id $APP_CLIENT_ID
+```
+
+### Step 4: Grant Admin Consent
+
+```bash
+az ad app permission admin-consent --id $APP_CLIENT_ID
+```
+
+Or use the script:
+
+```bash
+./scripts/grant-admin-consent.sh
+```
+
+---
+
+## Configuration Summary
+
+### Application Details
+
+| Setting | Value |
+|---------|-------|
+| Display Name | FeatureFlagToggler |
+| Sign-in Audience | AzureADMyOrg (Single tenant) |
+| Platform | Single-page application (SPA) |
+
+### Redirect URIs
+
+| Environment | URIs |
+|-------------|------|
+| Local Development | `http://localhost:5173`, `http://localhost:5173/auth/callback` |
+| Production | Auto-configured by Terraform (Container App URL) |
+
+### API Permissions (Delegated)
+
+| API | Permission | Description |
+|-----|------------|-------------|
+| Microsoft Graph | User.Read | Read user profile |
+| Microsoft Graph | openid | Sign users in |
+| Microsoft Graph | profile | View users' basic profile |
+| Microsoft Graph | email | View users' email address |
+| Azure Service Management | user_impersonation | Access Azure resources |
+| Azure App Configuration | KeyValue.Read | Read configuration values |
+| Azure App Configuration | KeyValue.Write | Write configuration values |
+
+---
+
+## Environment Configuration
+
+### Frontend (`.env.local`)
+
+```env
+VITE_AZURE_CLIENT_ID=<your-client-id>
+VITE_AZURE_TENANT_ID=<your-tenant-id>
+VITE_API_BASE_URL=http://localhost:5000
+```
+
+### Backend (`appsettings.Development.json`)
+
+```json
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "<your-tenant-id>",
+    "ClientId": "<your-client-id>",
+    "Audience": "<your-client-id>"
+  }
+}
+```
+
+---
+
+## Testing the Configuration
+
+1. **Start the backend:**
+   ```bash
+   cd backend
+   dotnet run
+   ```
+
+2. **Start the frontend:**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+3. **Open** http://localhost:5173
+
+4. **Click** "Sign in with Microsoft"
+
+5. **Login** with your Azure AD credentials
+
+6. **Verify** you're redirected to the dashboard
+
+---
+
 ## Troubleshooting
 
-### Issue: "AADSTS50011: The redirect URI specified in the request does not match"
+### "AADSTS50011: The redirect URI specified in the request does not match"
 
-**Solution**: Verify redirect URIs are exactly `http://localhost:5173` (no trailing slash)
-
-### Issue: "AADSTS65001: The user or administrator has not consented"
-
-**Solution**: Admin consent was already granted, but if needed:
+The redirect URI must match exactly. Ensure it's `http://localhost:5173` (no trailing slash).
 
 ```bash
-az ad app permission admin-consent --id YOUR_CLIENT_ID
+# Check current redirect URIs
+az ad app show --id $APP_CLIENT_ID --query "spa.redirectUris" -o json
 ```
 
-### Issue: "AADSTS700016: Application not found"
+### "AADSTS65001: The user or administrator has not consented"
 
-**Solution**: Check VITE_AZURE_CLIENT_ID in `.env.local` matches `YOUR_CLIENT_ID`
-
-### Issue: User can't access application
-
-**Solution**: User is already assigned. If assignment was removed, reassign:
+Run the admin consent script:
 
 ```bash
-az rest --method POST \
-  --uri "https://graph.microsoft.com/v1.0/servicePrincipals/YOUR_SERVICE_PRINCIPAL_ID/appRoleAssignedTo" \
-  --body '{
-    "principalId": "YOUR_USER_OBJECT_ID",
-    "resourceId": "YOUR_SERVICE_PRINCIPAL_ID",
-    "appRoleId": "00000000-0000-0000-0000-000000000000"
-  }'
+./scripts/grant-admin-consent.sh
 ```
+
+Or grant consent via Azure Portal:
+1. Go to Azure Portal > Azure Active Directory > App registrations
+2. Select your application
+3. Go to API permissions
+4. Click "Grant admin consent"
+
+### "AADSTS700016: Application not found"
+
+Check that the client ID in your `.env.local` matches the actual application ID:
+
+```bash
+az ad app list --display-name "FeatureFlagToggler" --query "[].appId" -o tsv
+```
+
+---
 
 ## Azure CLI Commands Reference
 
-View app configuration:
-
 ```bash
-az ad app show --id YOUR_CLIENT_ID
-```
+# View application details
+az ad app show --id $APP_CLIENT_ID
 
-View service principal:
+# List API permissions
+az ad app show --id $APP_CLIENT_ID --query "requiredResourceAccess" -o json
 
-```bash
-az ad sp show --id YOUR_SERVICE_PRINCIPAL_ID
-```
+# View service principal
+az ad sp show --id $APP_CLIENT_ID
 
-List app role assignments:
-
-```bash
+# List user assignments
 az rest --method GET \
-  --uri "https://graph.microsoft.com/v1.0/servicePrincipals/YOUR_SERVICE_PRINCIPAL_ID/appRoleAssignedTo"
+  --uri "https://graph.microsoft.com/v1.0/servicePrincipals/<sp-id>/appRoleAssignedTo"
 ```
 
-View user details:
+---
 
-```bash
-az ad user show --id YOUR_USER_OBJECT_ID
-```
+## Related Scripts
 
-## Summary
-
-✅ **All Azure AD configuration is complete and persisted**
-✅ **YOUR_NAME has access to the application**
-✅ **Ready to test authentication flow**
-
-The application is now fully configured and ready for local development and testing!
+- [`scripts/setup-azure-ad.sh`](./scripts/setup-azure-ad.sh) - Full Azure AD setup for local development
+- [`scripts/grant-admin-consent.sh`](./scripts/grant-admin-consent.sh) - Grant admin consent for API permissions
+- [`scripts/setup-cicd.sh`](./scripts/setup-cicd.sh) - Set up CI/CD pipeline (includes service principal)

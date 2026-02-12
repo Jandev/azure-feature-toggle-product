@@ -110,3 +110,9 @@ variable "key_vault_soft_delete_days" {
     error_message = "Soft delete retention must be between 7 and 90 days."
   }
 }
+
+variable "grant_admin_consent" {
+  description = "Whether to automatically grant admin consent for API permissions. Requires Application Administrator or Global Administrator role."
+  type        = bool
+  default     = true
+}
