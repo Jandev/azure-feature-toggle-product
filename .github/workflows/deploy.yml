@@ -1,0 +1,194 @@
+name: Deploy to Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy        # Apply Terraform + deploy app
+          - plan          # Terraform plan only (no changes)
+          - destroy       # Tear down infrastructure
+
+env:
+  TF_VERSION: '1.7'
+  IMAGE_NAME: azure-feature-toggle
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # Run Terraform to provision/update infrastructure
+  terraform:
+    name: Terraform ${{ inputs.action == 'plan' && 'Plan' || inputs.action == 'destroy' && 'Destroy' || 'Apply' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      acr_login_server: ${{ steps.tf-output.outputs.acr_login_server }}
+      acr_name: ${{ steps.tf-output.outputs.acr_name }}
+      resource_group: ${{ steps.tf-output.outputs.resource_group }}
+      container_app_name: ${{ steps.tf-output.outputs.container_app_name }}
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false  # Needed for outputs
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ secrets.TF_STATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=${{ inputs.environment }}.terraform.tfstate"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_USE_OIDC: true
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+            -var="environment=${{ inputs.environment }}" \
+            -var="project_name=feature-toggle" \
+            -var="location=${{ vars.AZURE_LOCATION || 'westeurope' }}" \
+            -out=tfplan \
+            -detailed-exitcode
+        continue-on-error: true
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_USE_OIDC: true
+
+      - name: Terraform Apply
+        if: inputs.action == 'deploy' && steps.plan.outcome == 'success'
+        run: terraform apply -auto-approve tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_USE_OIDC: true
+
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        run: |
+          terraform destroy \
+            -var="environment=${{ inputs.environment }}" \
+            -var="project_name=feature-toggle" \
+            -var="location=${{ vars.AZURE_LOCATION || 'westeurope' }}" \
+            -auto-approve
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_USE_OIDC: true
+
+      - name: Get Terraform Outputs
+        id: tf-output
+        if: inputs.action == 'deploy'
+        run: |
+          echo "acr_login_server=$(terraform output -raw acr_login_server)" >> $GITHUB_OUTPUT
+          echo "acr_name=$(terraform output -raw acr_name)" >> $GITHUB_OUTPUT
+          echo "resource_group=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+          echo "container_app_name=$(terraform output -raw container_app_name)" >> $GITHUB_OUTPUT
+
+  # Build and push Docker image to ACR
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: terraform
+    if: inputs.action == 'deploy'
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ needs.terraform.outputs.acr_name }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ needs.terraform.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ needs.terraform.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to Container Apps
+  deploy:
+    name: Deploy to Container Apps
+    runs-on: ubuntu-latest
+    needs: [terraform, build-and-push]
+    if: inputs.action == 'deploy'
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ needs.terraform.outputs.container_app_name }} \
+            --resource-group ${{ needs.terraform.outputs.resource_group }} \
+            --image ${{ needs.terraform.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Get App URL
+        id: app-url
+        run: |
+          URL=$(az containerapp show \
+            --name ${{ needs.terraform.outputs.container_app_name }} \
+            --resource-group ${{ needs.terraform.outputs.resource_group }} \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)
+          echo "url=https://$URL" >> $GITHUB_OUTPUT
+          echo "### Deployment Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Application URL:** https://$URL" >> $GITHUB_STEP_SUMMARY
