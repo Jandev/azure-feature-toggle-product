@@ -1,0 +1,37 @@
+# Example Terraform Variables
+# Copy this file to terraform.tfvars and fill in your values
+
+# Required: Azure identifiers
+subscription_id = "your-subscription-id"
+tenant_id       = "your-tenant-id"
+
+# Optional: Project configuration
+project_name = "featuretoggle"
+environment  = "dev"  # dev, staging, or prod
+location     = "westeurope"
+
+# Optional: Container configuration
+container_image_tag = "latest"
+container_cpu       = 0.5
+container_memory    = "1Gi"
+min_replicas        = 0
+max_replicas        = 3
+
+# Optional: App Registration
+app_display_name = "Azure Feature Toggle Manager"
+
+# Optional: Additional redirect URIs (localhost is included by default)
+additional_redirect_uris = [
+  "http://localhost:5173"
+]
+
+# Optional: Build configuration
+build_and_push_image = true
+source_path          = ".."
+
+# Optional: Resource naming suffix (leave empty for auto-generated)
+resource_suffix = ""
+
+# Optional: Key Vault configuration
+key_vault_purge_protection = false  # Set to true for production
+key_vault_soft_delete_days = 7      # 7-90 days, use 90 for production
