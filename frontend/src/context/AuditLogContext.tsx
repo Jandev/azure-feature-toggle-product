@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { AuditLogEntry, AuditLogFilters } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from './AuthContext';
+import { useResources } from './ResourceContext';
 
 interface AuditLogContextType {
   entries: AuditLogEntry[];
@@ -29,10 +30,20 @@ export function AuditLogProvider({ children }: { children: ReactNode }) {
   const [hasMore, setHasMore] = useState(false);
 
   const { getAccessToken } = useAuth();
+  const { currentResource } = useResources();
 
   // Fetch audit logs when filters change
   // Backend uses OBO flow to get App Config token - we just pass our API token
   const fetchLogs = useCallback(async () => {
+    // Don't fetch if no resource is selected
+    if (!currentResource) {
+      console.log('[AuditLogContext] No resource selected, skipping audit log fetch');
+      setEntries([]);
+      setTotalCount(0);
+      setError(null);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -43,28 +54,62 @@ export function AuditLogProvider({ children }: { children: ReactNode }) {
         throw new Error('Authentication required');
       }
 
+      // Calculate start date based on date range filter
+      const startDate = new Date();
+      switch (filters.dateRange) {
+        case 'last7days':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case 'last30days':
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case 'last90days':
+          startDate.setDate(startDate.getDate() - 90);
+          break;
+      }
+
+      // Build query params with required endpoint and resourceId
       const params = new URLSearchParams({
-        dateRange: filters.dateRange,
-        ...(filters.environmentType && { environmentType: filters.environmentType }),
-        ...(filters.action && { action: filters.action }),
-        ...(filters.toggleName && { toggleName: filters.toggleName }),
+        endpoint: currentResource.endpoint,
+        resourceId: currentResource.id,
+        startDate: startDate.toISOString(),
       });
 
+      console.log('[AuditLogContext] Fetching audit logs for resource:', currentResource.displayName);
       const data = await apiClient.get<AuditLogEntry[]>(
-        `/audit-logs?${params.toString()}`,
+        `/auditlogs?${params.toString()}`,
         token
       );
 
-      setEntries(data);
-      setTotalCount(data.length);
+      // Apply client-side filters for environment, action, and toggle name
+      let filteredData = data;
+      if (filters.environmentType) {
+        filteredData = filteredData.filter(
+          (entry) => entry.environmentType === filters.environmentType
+        );
+      }
+      if (filters.action) {
+        filteredData = filteredData.filter(
+          (entry) => entry.action === filters.action
+        );
+      }
+      if (filters.toggleName) {
+        filteredData = filteredData.filter(
+          (entry) => entry.toggleName.toLowerCase().includes(filters.toggleName!.toLowerCase())
+        );
+      }
+
+      setEntries(filteredData);
+      setTotalCount(filteredData.length);
       setHasMore(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load audit logs');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load audit logs';
+      setError(errorMessage);
       console.error('Failed to fetch audit logs:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [filters, getAccessToken]);
+  }, [filters, getAccessToken, currentResource]);
 
   useEffect(() => {
     fetchLogs();
