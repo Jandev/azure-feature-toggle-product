@@ -4,6 +4,10 @@
 FROM node:20-alpine AS frontend-build
 WORKDIR /frontend
 
+# Build arguments for frontend configuration
+ARG VITE_AZURE_CLIENT_ID
+ARG VITE_AZURE_TENANT_ID
+
 # Copy frontend package files
 COPY frontend/package*.json ./
 RUN npm ci
@@ -11,8 +15,10 @@ RUN npm ci
 # Copy frontend source code
 COPY frontend/ ./
 
-# Build frontend with /api as the base URL for API calls
+# Build frontend with environment variables
 ENV VITE_API_BASE_URL=/api
+ENV VITE_AZURE_CLIENT_ID=${VITE_AZURE_CLIENT_ID}
+ENV VITE_AZURE_TENANT_ID=${VITE_AZURE_TENANT_ID}
 RUN npm run build
 
 # Stage 2: Build .NET Backend
