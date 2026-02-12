@@ -1,7 +1,8 @@
 # Azure Container Registry
 
 resource "azurerm_container_registry" "main" {
-  name                = "acr${var.project_name}${var.environment}${local.resource_suffix}"
+  # ACR names must be alphanumeric only - remove hyphens and use lowercase
+  name                = "acr${replace(var.project_name, "-", "")}${replace(var.environment, "-", "")}${local.resource_suffix}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku                 = "Basic"
