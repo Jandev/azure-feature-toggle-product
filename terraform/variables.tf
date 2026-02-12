@@ -7,13 +7,13 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "Environment name (dev, staging, prod)"
+  description = "Environment name (dev, staging, prod, production)"
   type        = string
   default     = "dev"
 
   validation {
-    condition     = contains(["dev", "staging", "prod"], var.environment)
-    error_message = "Environment must be dev, staging, or prod."
+    condition     = contains(["dev", "staging", "prod", "production"], var.environment)
+    error_message = "Environment must be dev, staging, prod, or production."
   }
 }
 
@@ -78,7 +78,7 @@ variable "app_display_name" {
 variable "additional_redirect_uris" {
   description = "Additional redirect URIs for the app registration (e.g., localhost for development)"
   type        = list(string)
-  default     = ["http://localhost:5173"]
+  default     = ["http://localhost:5173/"]
 }
 
 variable "build_and_push_image" {
