@@ -40,6 +40,17 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Log all incoming requests for debugging
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Incoming request: {Method} {Path} {QueryString}", 
+        context.Request.Method, context.Request.Path, context.Request.QueryString);
+    await next();
+    logger.LogInformation("Response: {StatusCode} for {Method} {Path}", 
+        context.Response.StatusCode, context.Request.Method, context.Request.Path);
+});
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

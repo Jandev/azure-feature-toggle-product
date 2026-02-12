@@ -59,6 +59,9 @@ public class TogglesController : ControllerBase
         string toggleId,
         [FromBody] UpdateToggleRequest request)
     {
+        _logger.LogInformation("UpdateToggle called with toggleId: {ToggleId}, Raw path: {Path}", 
+            toggleId, HttpContext.Request.Path);
+        
         try
         {
             // URL decode the toggleId in case it contains encoded characters like %2F
