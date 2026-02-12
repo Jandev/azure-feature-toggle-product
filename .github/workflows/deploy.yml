@@ -10,25 +10,25 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy to'
+        description: "Environment to deploy to"
         required: true
-        default: 'production'
+        default: "production"
         type: choice
         options:
           - production
           - staging
       action:
-        description: 'Action to perform'
+        description: "Action to perform"
         required: true
-        default: 'deploy'
+        default: "deploy"
         type: choice
         options:
-          - deploy        # Apply Terraform + deploy app
-          - plan          # Terraform plan only (no changes)
-          - destroy       # Tear down infrastructure
+          - deploy # Apply Terraform + deploy app
+          - plan # Terraform plan only (no changes)
+          - destroy # Tear down infrastructure
 
 env:
-  TF_VERSION: '1.7'
+  TF_VERSION: "1.7"
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -62,7 +62,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-          terraform_wrapper: false  # Needed for outputs
+          terraform_wrapper: false # Needed for outputs
 
       - name: Azure Login
         uses: azure/login@v2
@@ -186,7 +186,5 @@ jobs:
             --output tsv)
           echo "url=https://$URL" >> $GITHUB_OUTPUT
           echo "### Deployment Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Application URL:** https://$URL" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Docker Image:** \`${IMAGE_NAME_LOWER}:latest\`" >> $GITHUB_STEP_SUMMARY
