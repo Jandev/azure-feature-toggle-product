@@ -86,8 +86,9 @@ export function ToggleProvider({ children }: { children: ReactNode }) {
       }
 
       const updatedToggle = await apiClient.put<FeatureToggle>(
-        `/toggles/${encodeURIComponent(request.toggleId)}`,
+        `/toggles`,
         {
+          toggleId: request.toggleId,
           endpoint: currentResource.endpoint,
           resourceId: currentResource.id,
           enabled: request.newState,

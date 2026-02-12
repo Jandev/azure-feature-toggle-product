@@ -54,18 +54,16 @@ public class TogglesController : ControllerBase
         }
     }
 
-    [HttpPut("{*toggleId}")]
+    [HttpPut]
     public async Task<ActionResult<FeatureToggle>> UpdateToggle(
-        string toggleId,
         [FromBody] UpdateToggleRequest request)
     {
         _logger.LogInformation("UpdateToggle called with toggleId: {ToggleId}, Raw path: {Path}", 
-            toggleId, HttpContext.Request.Path);
+            request.ToggleId, HttpContext.Request.Path);
         
         try
         {
-            // URL decode the toggleId in case it contains encoded characters like %2F
-            toggleId = Uri.UnescapeDataString(toggleId);
+            var toggleId = request.ToggleId;
             
             // Get user info from claims
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? 
@@ -110,6 +108,7 @@ public class TogglesController : ControllerBase
 
 public record UpdateToggleRequest
 {
+    public string ToggleId { get; set; } = string.Empty;
     public string Endpoint { get; set; } = string.Empty;
     public string ResourceId { get; set; } = string.Empty;
     public bool Enabled { get; set; }
