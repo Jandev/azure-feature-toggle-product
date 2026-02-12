@@ -47,8 +47,6 @@ jobs:
     outputs:
       resource_group: ${{ steps.tf-output.outputs.resource_group }}
       container_app_name: ${{ steps.tf-output.outputs.container_app_name }}
-      client_id: ${{ steps.tf-output.outputs.client_id }}
-      tenant_id: ${{ steps.tf-output.outputs.tenant_id }}
 
     defaults:
       run:
@@ -143,8 +141,6 @@ jobs:
         run: |
           echo "resource_group=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
           echo "container_app_name=$(terraform output -raw container_app_name)" >> $GITHUB_OUTPUT
-          echo "client_id=$(terraform output -raw client_id)" >> $GITHUB_OUTPUT
-          echo "tenant_id=$(terraform output -raw tenant_id)" >> $GITHUB_OUTPUT
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
