@@ -39,12 +39,6 @@ variable "resource_suffix" {
   default     = ""
 }
 
-variable "container_image_tag" {
-  description = "Docker image tag to deploy"
-  type        = string
-  default     = "latest"
-}
-
 variable "container_cpu" {
   description = "CPU cores for the container (e.g., 0.5, 1, 2)"
   type        = number
@@ -81,16 +75,10 @@ variable "additional_redirect_uris" {
   default     = ["http://localhost:5173/"]
 }
 
-variable "build_and_push_image" {
-  description = "Whether to build and push the Docker image to ACR. Set to false if you want to push manually."
-  type        = bool
-  default     = true
-}
-
-variable "source_path" {
-  description = "Path to the source code directory (relative to terraform directory or absolute)"
+variable "ghcr_image" {
+  description = "GitHub Container Registry image to deploy (e.g., ghcr.io/jandev/azure-feature-toggle-product:latest)"
   type        = string
-  default     = ".."
+  default     = "ghcr.io/jandev/azure-feature-toggle-product:latest"
 }
 
 # Key Vault configuration

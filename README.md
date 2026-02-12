@@ -193,7 +193,7 @@ Open http://localhost:5173
 
 See [terraform/README.md](terraform/README.md) for deploying to Azure Container Apps with:
 
-- Azure Container Registry
+- GitHub Container Registry (public image)
 - Azure Key Vault (secure secret storage)
 - Managed Identity
 - Auto-created App Registration

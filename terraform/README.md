@@ -7,7 +7,6 @@ This Terraform configuration deploys the Azure Feature Toggle Manager applicatio
 | Resource | Description |
 |----------|-------------|
 | Resource Group | Contains all resources |
-| Azure Container Registry | Hosts the Docker image |
 | Log Analytics Workspace | Required for Container Apps |
 | Container Apps Environment | Hosting environment |
 | Container App | The running application with HTTPS |
@@ -16,6 +15,8 @@ This Terraform configuration deploys the Azure Feature Toggle Manager applicatio
 | Azure Key Vault | Secure storage for client secret |
 | User-Assigned Managed Identity | For Container App to access Key Vault |
 | Client Secret | For OBO flow (stored in Key Vault) |
+
+**Note:** Docker images are hosted on GitHub Container Registry (ghcr.io), not Azure Container Registry.
 
 ## Infrastructure Architecture
 
@@ -27,11 +28,14 @@ graph TB
                 CA[Container App<br/>Port 5173]
             end
             
-            ACR[Azure Container<br/>Registry]
             KV[Azure Key Vault]
             LOG[Log Analytics<br/>Workspace]
             MI[Managed Identity]
         end
+    end
+
+    subgraph "GitHub"
+        GHCR[GitHub Container<br/>Registry]
     end
 
     subgraph "Azure AD"
@@ -47,8 +51,7 @@ graph TB
 
     TF -->|Creates| RG
     TF -->|Creates| APP
-    TF -->|Builds & pushes image| ACR
-    ACR -->|Pulls image| CA
+    GHCR -->|Pulls image| CA
     MI -->|Reads secrets| KV
     CA -->|Uses| MI
     CA -->|Logs to| LOG
@@ -67,15 +70,14 @@ sequenceDiagram
     participant TF as Terraform
     participant Azure as Azure RM
     participant AAD as Azure AD
-    participant Docker as Docker
-    participant ACR as Container Registry
+    participant GH as GitHub Actions
+    participant GHCR as GitHub Container Registry
 
     Dev->>TF: terraform apply
     
     TF->>Azure: Create Resource Group
     TF->>Azure: Create Log Analytics
     TF->>Azure: Create Key Vault
-    TF->>Azure: Create Container Registry
     TF->>Azure: Create Managed Identity
     
     TF->>AAD: Create App Registration
@@ -86,15 +88,14 @@ sequenceDiagram
     TF->>Azure: Store secret in Key Vault
     TF->>Azure: Assign RBAC roles
     
-    TF->>Docker: Build image
-    Docker->>ACR: Push image
-    
     TF->>Azure: Create Container Apps Environment
-    TF->>Azure: Create Container App
+    TF->>Azure: Create Container App (pulls from GHCR)
     
     TF->>AAD: Update redirect URIs with app URL
     
     TF->>Dev: Output URLs and IDs
+    
+    Note over GH,GHCR: CI/CD builds and pushes images to GHCR
 ```
 
 ## Secret Management Flow
@@ -125,7 +126,6 @@ flowchart LR
 
 1. **Azure CLI** - [Install Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 2. **Terraform** - [Install Terraform](https://www.terraform.io/downloads) (>= 1.5.0)
-3. **Docker** - [Install Docker](https://docs.docker.com/get-docker/)
 
 ### Required Azure Permissions
 
@@ -227,7 +227,7 @@ terraform output container_app_url
 | `container_memory` | `1Gi` | Memory for the container |
 | `min_replicas` | `0` | Minimum replicas (0 = scale to zero) |
 | `max_replicas` | `3` | Maximum replicas |
-| `build_and_push_image` | `true` | Auto-build and push Docker image |
+| `ghcr_image` | `ghcr.io/jandev/azure-feature-toggle-product:latest` | GitHub Container Registry image |
 | `key_vault_purge_protection` | `false` | Enable purge protection (recommended for prod) |
 | `key_vault_soft_delete_days` | `7` | Soft delete retention (7-90 days) |
 
@@ -305,13 +305,14 @@ terraform output summary
 
 ### Update Application Code
 
-```bash
-# Rebuild and redeploy the container
-terraform apply -var="container_image_tag=v1.0.1"
+The Docker image is built and pushed by GitHub Actions CI/CD. To deploy a new version:
 
-# Or force a rebuild with the same tag
-terraform taint null_resource.docker_build_push[0]
-terraform apply
+```bash
+# Deploy a specific image tag
+terraform apply -var="ghcr_image=ghcr.io/jandev/azure-feature-toggle-product:abc123"
+
+# Or use latest
+terraform apply -var="ghcr_image=ghcr.io/jandev/azure-feature-toggle-product:latest"
 ```
 
 ### Update Infrastructure
@@ -335,8 +336,9 @@ terraform destroy
 **Warning:** This will delete:
 - All Azure resources
 - The Azure AD App Registration
-- The Docker image in ACR
 - The Key Vault (soft-deleted, recoverable for `key_vault_soft_delete_days`)
+
+**Note:** Docker images remain in GitHub Container Registry.
 
 **Note:** If `key_vault_purge_protection = true`, the Key Vault cannot be immediately purged and must wait for the retention period.
 
@@ -348,18 +350,14 @@ terraform destroy
 flowchart TD
     PROBLEM[Deployment Issue] --> TYPE{What type?}
     
-    TYPE -->|Build| BUILD[Image Build Fails]
     TYPE -->|Runtime| RUNTIME[App Not Starting]
     TYPE -->|Auth| AUTH[Authentication Errors]
     TYPE -->|Secrets| SECRETS[Key Vault Issues]
     
-    BUILD --> B1[Check Dockerfile syntax]
-    BUILD --> B2[Verify Docker daemon running]
-    BUILD --> B3[Check ACR connectivity]
-    
     RUNTIME --> R1[Check container logs]
     RUNTIME --> R2[Verify environment variables]
     RUNTIME --> R3[Check health endpoint]
+    RUNTIME --> R4[Verify GHCR image exists]
     
     AUTH --> A1[Verify admin consent granted]
     AUTH --> A2[Check API permissions]
@@ -368,16 +366,6 @@ flowchart TD
     SECRETS --> S1[Check managed identity]
     SECRETS --> S2[Verify RBAC assignment]
     SECRETS --> S3[Test secret retrieval]
-```
-
-### Image Build Fails
-
-```bash
-# Build manually
-cd ..
-docker build -t test-build .
-
-# Check for errors and fix
 ```
 
 ### Container App Not Starting
@@ -425,13 +413,14 @@ terraform/
 ├── variables.tf               # Input variables
 ├── outputs.tf                 # Output values
 ├── resource-group.tf          # Resource group
-├── acr.tf                     # Container Registry + image build
 ├── container-apps.tf          # Container Apps Environment + App
 ├── key-vault.tf               # Key Vault + managed identity
 ├── app-registration.tf        # Azure AD App Registration
 ├── terraform.tfvars.example   # Example variables
 └── README.md                  # This file
 ```
+
+**Note:** Docker images are built and pushed by GitHub Actions to ghcr.io/jandev/azure-feature-toggle-product
 
 ## Security Model
 
@@ -492,7 +481,6 @@ terraform {
 ```
 
 Additional recommendations:
-- Use managed identity instead of ACR admin credentials
 - Configure custom domain with managed certificate
 - Enable diagnostic settings for all resources
 - Set up Azure Monitor alerts for failures

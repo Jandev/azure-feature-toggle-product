@@ -36,17 +36,8 @@ resource "azurerm_container_app" "main" {
     identity_ids = [azurerm_user_assigned_identity.container_app.id]
   }
 
-  # Registry configuration for ACR
-  registry {
-    server               = azurerm_container_registry.main.login_server
-    username             = azurerm_container_registry.main.admin_username
-    password_secret_name = "acr-password"
-  }
-
-  secret {
-    name  = "acr-password"
-    value = azurerm_container_registry.main.admin_password
-  }
+  # Note: Using public ghcr.io image - no registry credentials needed
+  # If using a private ghcr.io package, add registry credentials here
 
   # Client secret from Key Vault using managed identity
   secret {
@@ -72,7 +63,7 @@ resource "azurerm_container_app" "main" {
 
     container {
       name   = var.project_name
-      image  = "${azurerm_container_registry.main.login_server}/${var.project_name}:${var.container_image_tag}"
+      image  = var.ghcr_image
       cpu    = var.container_cpu
       memory = var.container_memory
 
@@ -114,7 +105,6 @@ resource "azurerm_container_app" "main" {
   }
 
   depends_on = [
-    null_resource.docker_build_push,
     azurerm_key_vault_secret.client_secret,
     azurerm_role_assignment.container_app_kv_reader
   ]

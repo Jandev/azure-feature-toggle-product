@@ -11,17 +11,6 @@ output "container_app_name" {
   value       = azurerm_container_app.main.name
 }
 
-# Container Registry
-output "acr_login_server" {
-  description = "ACR login server"
-  value       = azurerm_container_registry.main.login_server
-}
-
-output "acr_name" {
-  description = "Name of the Azure Container Registry"
-  value       = azurerm_container_registry.main.name
-}
-
 # Azure AD App Registration
 output "client_id" {
   description = "Azure AD Application (Client) ID"
@@ -94,9 +83,8 @@ output "summary" {
       Client ID:   ${azuread_application.main.client_id}
       App ID URI:  api://${azuread_application.main.client_id}
     
-    Container Registry:
-      Server: ${azurerm_container_registry.main.login_server}
-      Image:  ${azurerm_container_registry.main.login_server}/${var.project_name}:${var.container_image_tag}
+    Container Image:
+      Image: ${var.ghcr_image}
     
     Key Vault:
       Name: ${azurerm_key_vault.main.name}
