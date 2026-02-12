@@ -23,11 +23,13 @@ on:
 
 env:
   TF_VERSION: '1.7'
-  IMAGE_NAME: azure-feature-toggle
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 permissions:
   id-token: write
   contents: read
+  packages: write
 
 jobs:
   # Run Terraform to provision/update infrastructure
@@ -143,7 +145,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_USE_OIDC: true
 
-  # Build and push Docker image to ACR
+  # Build Docker image with correct Azure AD config and push to both registries
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
@@ -164,17 +166,26 @@ jobs:
       - name: Login to ACR
         run: az acr login --name ${{ needs.terraform.outputs.acr_name }}
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build and push to both registries
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ${{ needs.terraform.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ needs.terraform.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:latest
+            ${{ needs.terraform.outputs.acr_login_server }}/azure-feature-toggle:${{ github.sha }}
+            ${{ needs.terraform.outputs.acr_login_server }}/azure-feature-toggle:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           build-args: |
             VITE_AZURE_CLIENT_ID=${{ needs.terraform.outputs.client_id }}
             VITE_AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
@@ -202,7 +213,7 @@ jobs:
           az containerapp update \
             --name ${{ needs.terraform.outputs.container_app_name }} \
             --resource-group ${{ needs.terraform.outputs.resource_group }} \
-            --image ${{ needs.terraform.outputs.acr_login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            --image ${{ needs.terraform.outputs.acr_login_server }}/azure-feature-toggle:${{ github.sha }}
 
       - name: Get App URL
         id: app-url
@@ -216,3 +227,7 @@ jobs:
           echo "### Deployment Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Application URL:** https://$URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Images:**" >> $GITHUB_STEP_SUMMARY
+          echo "- ACR: \`${{ needs.terraform.outputs.acr_login_server }}/azure-feature-toggle:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- GHCR: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
