@@ -2,7 +2,7 @@
 
 # Well-known Microsoft API IDs
 locals {
-  microsoft_graph_api_id         = "00000003-0000-0000-c000-000000000000"
+  microsoft_graph_api_id          = "00000003-0000-0000-c000-000000000000"
   azure_service_management_api_id = "797f4846-ba00-4fd7-ba43-dac1f8f63013"
   azure_app_configuration_api_id  = "35ffadb3-7fc1-497e-b61b-381d28e744cc"
 
