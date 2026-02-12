@@ -1,14 +1,17 @@
 # Terraform Outputs
+# All outputs marked sensitive to prevent exposure in CI logs
 
 # Container App
 output "container_app_url" {
   description = "URL of the deployed Container App"
   value       = "https://${azurerm_container_app.main.ingress[0].fqdn}"
+  sensitive   = true
 }
 
 output "container_app_name" {
   description = "Name of the Container App"
   value       = azurerm_container_app.main.name
+  sensitive   = true
 }
 
 # Azure AD App Registration
@@ -33,6 +36,7 @@ output "app_id_uri" {
 output "client_secret_name" {
   description = "Name of the client secret (value is sensitive)"
   value       = azuread_application_password.main.display_name
+  sensitive   = true
 }
 
 # Key Vault
@@ -67,14 +71,16 @@ output "managed_identity_client_id" {
 output "resource_group_name" {
   description = "Name of the resource group"
   value       = azurerm_resource_group.main.name
+  sensitive   = true
 }
 
 output "resource_group_location" {
   description = "Location of the resource group"
   value       = azurerm_resource_group.main.location
+  sensitive   = true
 }
 
-# Summary output for easy copy-paste (marked sensitive to hide from CI logs)
+# Summary output for easy copy-paste
 output "summary" {
   description = "Summary of deployed resources"
   sensitive   = true
