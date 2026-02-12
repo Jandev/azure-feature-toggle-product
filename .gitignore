@@ -1,45 +1,35 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
-# testing
+# Testing
 /coverage
 /playwright-report
 /test-results
 
-# next.js
-/.next/
-/out/
-
-# production
+# Production builds
 /build
+/dist
 
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# Local env files
 .env
 .env*.local
 
-# vercel
-.vercel
-
-# typescript
+# TypeScript
 *.tsbuildinfo
-next-env.d.ts
-
-# prisma
-/prisma/migrations
 
 # .NET
 [Bb]in/
@@ -54,7 +44,7 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
-# User-specific files
+# User-specific config files
 appsettings.Development.json
 appsettings.*.json
 !appsettings.json
@@ -74,3 +64,4 @@ terraform/override.tf
 terraform/override.tf.json
 terraform/*_override.tf
 terraform/*_override.tf.json
+.next
