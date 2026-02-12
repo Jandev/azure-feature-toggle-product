@@ -198,12 +198,18 @@ See [terraform/README.md](terraform/README.md) for deploying to Azure Container 
 - Managed Identity
 - Auto-created App Registration
 
+**Manual deployment:**
+
 ```bash
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars
 terraform init && terraform apply
 ```
+
+**CI/CD deployment:**
+
+GitHub Actions workflows are available for automated deployments. See [CICD-SETUP.md](CICD-SETUP.md) for setup instructions.
 
 ### Local Development
 
