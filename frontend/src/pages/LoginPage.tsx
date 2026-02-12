@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginScreen } from '@/components/sections/authentication/LoginScreen';
 import { useAuth } from '@/context/AuthContext';
@@ -8,12 +8,13 @@ export function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>();
+  const hasRedirected = useRef(false);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !hasRedirected.current) {
       console.log('User is authenticated, redirecting to dashboard...');
-      setStatus('success');
+      hasRedirected.current = true;
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);

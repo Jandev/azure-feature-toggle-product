@@ -52,8 +52,6 @@ resource "random_string" "suffix" {
 locals {
   resource_suffix = var.resource_suffix != "" ? var.resource_suffix : random_string.suffix.result
   name_prefix     = "${var.project_name}-${var.environment}"
-  
-  # Common tags
   common_tags = {
     Project     = var.project_name
     Environment = var.environment

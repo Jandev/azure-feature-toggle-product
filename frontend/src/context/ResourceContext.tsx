@@ -38,9 +38,9 @@ export function ResourceProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored) as AppConfigResource[];
         setResources(parsed);
         
-        // Set first resource as current if exists
-        if (parsed.length > 0 && !currentResource) {
-          setCurrentResource(parsed[0]);
+        // Set first resource as current if exists and no current resource
+        if (parsed.length > 0) {
+          setCurrentResource((prev) => prev ?? parsed[0]);
         }
       }
     } catch (error) {
@@ -253,6 +253,7 @@ export function ResourceProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useResources() {
   const context = useContext(ResourceContext);
   if (context === undefined) {

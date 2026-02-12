@@ -67,31 +67,14 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
     isAuthenticated: false,
   });
 
-  useEffect(() => {
-    if (inProgress === InteractionStatus.None) {
-      if (isAuthenticated && account) {
-        // User is authenticated, fetch additional user info
-        fetchUserInfo(account);
-      } else {
-        // Not authenticated
-        setAuthState({
-          status: 'idle',
-          user: null,
-          error: null,
-          isAuthenticated: false,
-        });
-      }
-    }
-  }, [isAuthenticated, account, inProgress]);
-
-  const fetchUserInfo = async (account: AccountInfo) => {
+  const fetchUserInfo = useCallback(async (accountInfo: AccountInfo) => {
     try {
       // For now, we'll use the account info from MSAL
       // In production, you might want to call your backend to get the role
       const user: User = {
-        id: account.localAccountId,
-        name: account.name || account.username,
-        email: account.username,
+        id: accountInfo.localAccountId,
+        name: accountInfo.name || accountInfo.username,
+        email: accountInfo.username,
         role: 'admin', // TODO: Fetch from backend based on RBAC
       };
 
@@ -110,7 +93,25 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
         isAuthenticated: false,
       });
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (inProgress === InteractionStatus.None) {
+      if (isAuthenticated && account) {
+        // User is authenticated, fetch additional user info
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing with external MSAL state is a valid use case
+        fetchUserInfo(account);
+      } else {
+        // Not authenticated
+        setAuthState({
+          status: 'idle',
+          user: null,
+          error: null,
+          isAuthenticated: false,
+        });
+      }
+    }
+  }, [isAuthenticated, account, inProgress, fetchUserInfo]);
 
   const login = async () => {
     try {
@@ -121,13 +122,14 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
       await instance.loginRedirect(loginRequest);
       
       // After redirect, user will come back and MSAL will handle the callback
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login failed:', error);
       
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
       setAuthState({
         status: 'error',
         user: null,
-        error: error.message || 'Login failed',
+        error: errorMessage,
         isAuthenticated: false,
       });
       
@@ -187,6 +189,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

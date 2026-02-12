@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Dashboard } from '@/components/sections/feature-toggle-dashboard/Dashboard';
 import { ProductionConfirmation } from '@/components/sections/feature-toggle-dashboard/ProductionConfirmation';
 import { useToggles } from '@/context/ToggleContext';
@@ -8,7 +8,7 @@ export function DashboardPage() {
   const { confirmationRequest, setConfirmationRequest, updateToggle } = useToggles();
   const { currentResource } = useResources();
 
-  const handleConfirm = async () => {
+  const handleConfirm = useCallback(async () => {
     if (!confirmationRequest) return;
 
     try {
@@ -17,7 +17,7 @@ export function DashboardPage() {
       console.error('Failed to update toggle:', error);
       // Error is already set in context
     }
-  };
+  }, [confirmationRequest, updateToggle]);
 
   const handleCancel = () => {
     setConfirmationRequest(null);
@@ -33,7 +33,7 @@ export function DashboardPage() {
     if (confirmationRequest && !shouldShowConfirmation) {
       handleConfirm();
     }
-  }, [confirmationRequest, shouldShowConfirmation]);
+  }, [confirmationRequest, shouldShowConfirmation, handleConfirm]);
 
   return (
     <div>

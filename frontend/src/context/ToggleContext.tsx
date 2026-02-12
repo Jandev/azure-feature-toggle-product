@@ -151,6 +151,7 @@ export function ToggleProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToggles() {
   const context = useContext(ToggleContext);
   if (context === undefined) {

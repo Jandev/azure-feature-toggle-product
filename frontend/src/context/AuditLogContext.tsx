@@ -176,6 +176,7 @@ export function AuditLogProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuditLog() {
   const context = useContext(AuditLogContext);
   if (context === undefined) {

@@ -9,6 +9,8 @@ import { ProtectedRoute } from './components/sections/authentication/ProtectedRo
 import { useAuth } from './context/AuthContext';
 import { useResources } from './context/ResourceContext';
 
+import type { AppConfigResource } from '@/types';
+
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,7 +44,7 @@ function AppContent() {
     }
   };
 
-  const handleResourceChange = (resource: any) => {
+  const handleResourceChange = (resource: AppConfigResource) => {
     setCurrentResource(resource);
   };
 
